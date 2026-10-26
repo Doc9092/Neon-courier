@@ -1,0 +1,4190 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Rush Delivery" />
+    <meta name="theme-color" content="#05060d" />
+    <title>Rush Delivery: Neon Courier</title>
+    <meta
+      name="description"
+      content="Вертикальная аркадная игра в стиле неонового киберпанка про курьера на моноколесе с физикой баланса посылки."
+    />
+    <meta property="og:title" content="Rush Delivery: Neon Courier" />
+    <meta
+      property="og:description"
+      content="Вертикальная аркадная игра в стиле неонового киберпанка про курьера на моноколесе с физикой баланса посылки."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700;800&family=Outfit:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-void: #05060d;
+        --bg-panel: rgba(10, 14, 28, 0.92);
+        --neon-cyan: #00f0ff;
+        --neon-magenta: #ff2a85;
+        --neon-emerald: #00ff9d;
+        --neon-amber: #ffb800;
+        --neon-red: #ff3355;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --safe-top: env(safe-area-inset-top, 0px);
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+        --safe-left: env(safe-area-inset-left, 0px);
+        --safe-right: env(safe-area-inset-right, 0px);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: var(--bg-void);
+        color: var(--text-main);
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+        touch-action: none;
+        overscroll-behavior: none;
+        position: fixed;
+        inset: 0;
+      }
+
+      .app-stage {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(circle at 50% 15%, rgba(0, 240, 255, 0.12), transparent 55%),
+          radial-gradient(circle at 50% 85%, rgba(255, 42, 133, 0.12), transparent 55%),
+          #04050a;
+      }
+
+      .game-viewport {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        max-width: min(100vw, calc(100vh * 9 / 16));
+        max-height: 100vh;
+        aspect-ratio: 9 / 16;
+        background: #070914;
+        overflow: hidden;
+        box-shadow:
+          0 0 0 1px rgba(0, 240, 255, 0.22),
+          0 24px 80px rgba(0, 0, 0, 0.85),
+          0 0 50px rgba(0, 240, 255, 0.12);
+      }
+
+      @media (max-width: 520px) {
+        .game-viewport {
+          max-width: 100vw;
+          max-height: 100vh;
+          aspect-ratio: auto;
+          box-shadow: none;
+        }
+      }
+
+      canvas#gameCanvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+
+      /* HUD Overlay Layer with iPhone Safe Area Insets (Dynamic Island & Home Indicator) */
+      .hud-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-top: calc(12px + env(safe-area-inset-top, 0px));
+        padding-right: calc(14px + env(safe-area-inset-right, 0px));
+        padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        padding-left: calc(14px + env(safe-area-inset-left, 0px));
+        z-index: 10;
+        transition: opacity 0.2s ease;
+      }
+
+      body[data-state='title'] .hud-layer,
+      body[data-state='orders'] .hud-layer,
+      body[data-state='garage'] .hud-layer {
+        opacity: 0;
+      }
+
+      .hud-top {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .hud-bar-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .hud-cluster {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(8, 12, 26, 0.86);
+        border: 1px solid rgba(0, 240, 255, 0.25);
+        border-radius: 12px;
+        padding: 6px 10px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      }
+
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .stat-kicker {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        line-height: 1.1;
+      }
+
+      .stat-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1.2;
+        text-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+      }
+
+      .stat-value.accent-cyan {
+        color: var(--neon-cyan);
+      }
+
+      .stat-value.accent-amber {
+        color: var(--neon-amber);
+        text-shadow: 0 0 10px rgba(255, 184, 0, 0.35);
+      }
+
+      .stat-divider {
+        width: 1px;
+        height: 24px;
+        background: rgba(148, 163, 184, 0.2);
+      }
+
+      .hud-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        pointer-events: auto;
+      }
+
+      .icon-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 240, 255, 0.3);
+        background: rgba(8, 12, 26, 0.88);
+        color: var(--text-main);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      }
+
+      .icon-btn:hover {
+        border-color: var(--neon-cyan);
+        background: rgba(0, 240, 255, 0.14);
+      }
+
+      .icon-btn:active {
+        transform: scale(0.94);
+      }
+
+      .hud-meters-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .meter-box {
+        background: rgba(8, 12, 26, 0.84);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 10px;
+        padding: 6px 10px;
+      }
+
+      .meter-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+
+      .meter-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .meter-readout {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--neon-emerald);
+      }
+
+      .meter-track {
+        position: relative;
+        width: 100%;
+        height: 7px;
+        background: rgba(15, 23, 42, 0.95);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .meter-ghost {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        background: rgba(255, 51, 85, 0.65);
+        border-radius: 999px;
+        transform-origin: left center;
+        transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .meter-fill {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, #00ff9d, #00f0ff);
+        border-radius: 999px;
+        transform-origin: left center;
+        transition: transform 0.12s linear;
+      }
+
+      .meter-fill.dist-fill {
+        background: linear-gradient(90deg, #00f0ff, #ff2a85);
+      }
+
+      .hud-bottom {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .touch-controls-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 6px;
+        pointer-events: auto;
+      }
+
+      .ctrl-pad-btn {
+        flex: 1;
+        min-height: 44px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 240, 255, 0.24);
+        background: rgba(8, 12, 26, 0.78);
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: transform 0.1s ease, background 0.12s ease, border-color 0.12s ease;
+        white-space: nowrap;
+      }
+
+      .ctrl-pad-btn:active {
+        transform: scale(0.95);
+        background: rgba(0, 240, 255, 0.2);
+        border-color: var(--neon-cyan);
+      }
+
+      .ctrl-pad-btn.boost-active {
+        border-color: var(--neon-magenta);
+        background: rgba(255, 42, 133, 0.22);
+        color: #ffd1e6;
+        box-shadow: 0 0 14px rgba(255, 42, 133, 0.35);
+      }
+
+      .ctrl-pad-btn.brake-active {
+        border-color: var(--neon-amber);
+        background: rgba(255, 184, 0, 0.2);
+        color: #ffebb3;
+      }
+
+      /* Overlay Screens with iPhone Safe Area Insets */
+      .overlay-screen {
+        position: absolute;
+        inset: 0;
+        z-index: 25;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: calc(18px + env(safe-area-inset-top, 0px));
+        padding-right: calc(16px + env(safe-area-inset-right, 0px));
+        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        padding-left: calc(16px + env(safe-area-inset-left, 0px));
+        background: linear-gradient(
+          180deg,
+          rgba(5, 6, 13, 0.9) 0%,
+          rgba(5, 6, 13, 0.62) 45%,
+          rgba(5, 6, 13, 0.95) 100%
+        );
+        transition: opacity 0.18s ease, visibility 0.18s ease;
+      }
+
+      .overlay-screen.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      /* Top Wallet Bar in Menus */
+      .menu-top-bar {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .wallet-display {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(9, 14, 30, 0.92);
+        border: 1px solid rgba(255, 184, 0, 0.4);
+        border-radius: 12px;
+        padding: 7px 12px;
+        box-shadow: 0 0 18px rgba(255, 184, 0, 0.15);
+      }
+
+      .wallet-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+      }
+
+      .wallet-amount {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--neon-amber);
+        text-shadow: 0 0 10px rgba(255, 184, 0, 0.45);
+      }
+
+      .title-hero {
+        width: 100%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .title-svg-emblem {
+        width: 72px;
+        height: 72px;
+        filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.5));
+      }
+
+      .game-title {
+        font-size: clamp(28px, 7vw, 38px);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        color: #ffffff;
+        text-shadow:
+          0 0 18px rgba(0, 240, 255, 0.6),
+          0 0 36px rgba(255, 42, 133, 0.35);
+        text-wrap: balance;
+      }
+
+      .game-subtitle {
+        font-size: 13px;
+        color: #cbd5e1;
+        max-width: 32ch;
+        line-height: 1.4;
+      }
+
+      .modal-card {
+        width: 100%;
+        background: rgba(9, 13, 28, 0.95);
+        border: 1px solid rgba(0, 240, 255, 0.32);
+        border-radius: 18px;
+        padding: 16px 14px;
+        box-shadow:
+          0 20px 50px rgba(0, 0, 0, 0.78),
+          0 0 30px rgba(0, 240, 255, 0.12);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .briefing-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        text-align: left;
+      }
+
+      .briefing-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        font-size: 12.5px;
+        line-height: 1.38;
+        color: #e2e8f0;
+      }
+
+      .briefing-index {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11.5px;
+        font-weight: 800;
+        color: var(--neon-cyan);
+        min-width: 20px;
+      }
+
+      .btn-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .primary-cta {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 13px;
+        border: 1px solid #67f9ff;
+        background: #00f0ff;
+        color: #040711;
+        font-family: 'Outfit', sans-serif;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        box-shadow:
+          0 0 22px rgba(0, 240, 255, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .primary-cta:hover {
+        background: #38f5ff;
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.78);
+      }
+
+      .primary-cta:active {
+        transform: scale(0.97);
+      }
+
+      .secondary-cta {
+        width: 100%;
+        min-height: 44px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 240, 255, 0.32);
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .secondary-cta:hover {
+        border-color: var(--neon-cyan);
+        background: rgba(0, 240, 255, 0.14);
+      }
+
+      .secondary-cta:active {
+        transform: scale(0.97);
+      }
+
+      /* Order Selection Cards */
+      .orders-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .order-card {
+        width: 100%;
+        text-align: left;
+        background: rgba(13, 19, 38, 0.92);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+      }
+
+      .order-card:hover {
+        border-color: var(--neon-cyan);
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.22);
+        transform: translateY(-1px);
+      }
+
+      .order-card:active {
+        transform: scale(0.98);
+      }
+
+      .order-card.order-easy {
+        border-color: rgba(0, 255, 157, 0.4);
+      }
+
+      .order-card.order-medium {
+        border-color: rgba(0, 240, 255, 0.45);
+      }
+
+      .order-card.order-hard {
+        border-color: rgba(255, 42, 133, 0.5);
+      }
+
+      .order-icon-box {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        background: rgba(5, 8, 18, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .order-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .order-top-line {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 6px;
+        margin-bottom: 3px;
+      }
+
+      .order-name {
+        font-size: 15px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+
+      .order-reward {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--neon-amber);
+        white-space: nowrap;
+      }
+
+      .order-meta {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--neon-cyan);
+        margin-bottom: 3px;
+      }
+
+      .order-desc {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        line-height: 1.3;
+      }
+
+      /* Garage / Upgrade Cards */
+      .upgrades-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .upgrade-row {
+        background: rgba(13, 19, 38, 0.92);
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 14px;
+        padding: 11px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .upgrade-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .upgrade-title-group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .upgrade-name {
+        font-size: 14.5px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+
+      .upgrade-desc {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        line-height: 1.3;
+      }
+
+      .upgrade-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .level-pips {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .level-pip {
+        width: 22px;
+        height: 7px;
+        border-radius: 4px;
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+      }
+
+      .level-pip.filled {
+        background: var(--neon-emerald);
+        border-color: #6ee7b7;
+        box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+      }
+
+      .level-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-left: 4px;
+      }
+
+      .buy-upgrade-btn {
+        min-height: 36px;
+        padding: 6px 12px;
+        border-radius: 9px;
+        border: 1px solid var(--neon-cyan);
+        background: rgba(0, 240, 255, 0.16);
+        color: #ffffff;
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background 0.12s ease, transform 0.1s ease;
+        white-space: nowrap;
+      }
+
+      .buy-upgrade-btn:hover:not(:disabled) {
+        background: var(--neon-cyan);
+        color: #040711;
+      }
+
+      .buy-upgrade-btn:disabled {
+        opacity: 0.48;
+        border-color: rgba(148, 163, 184, 0.3);
+        background: rgba(15, 23, 42, 0.6);
+        cursor: not-allowed;
+      }
+
+      .control-hint-footer {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-align: center;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+      }
+
+      /* Result / Receipt Styling */
+      .result-header {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .result-kicker {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--neon-cyan);
+      }
+
+      .result-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.15;
+      }
+
+      .result-subtitle {
+        font-size: 12.5px;
+        color: var(--text-muted);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .stat-tile {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        padding: 8px 6px;
+        text-align: center;
+      }
+
+      .stat-tile-label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 3px;
+      }
+
+      .stat-tile-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 15px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+
+      .receipt-box {
+        border-top: 1px solid rgba(148, 163, 184, 0.18);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+        padding: 10px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .receipt-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12.5px;
+        color: #cbd5e1;
+      }
+
+      .receipt-line span.mono {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        color: #f8fafc;
+      }
+
+      .receipt-total {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding-top: 4px;
+      }
+
+      .receipt-total-label {
+        font-size: 13.5px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+
+      .receipt-total-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--neon-emerald);
+        text-shadow: 0 0 14px rgba(0, 255, 157, 0.4);
+      }
+
+      /* Tactile Touch Pulse Animation for iOS / Mobile Buttons */
+      @keyframes btnTouchPulse {
+        0% {
+          transform: scale(1);
+        }
+        40% {
+          transform: scale(0.94);
+          box-shadow: 0 0 24px rgba(0, 240, 255, 0.65);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .touch-pulse {
+        animation: btnTouchPulse 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+    </style>
+  </head>
+  <body data-state="title">
+    <main class="app-stage">
+      <div class="game-viewport" id="gameViewport">
+        <canvas id="gameCanvas" data-testid="game-canvas"></canvas>
+
+        <!-- Active Gameplay HUD -->
+        <section class="hud-layer" id="hudLayer" aria-label="Игровой интерфейс">
+          <div class="hud-top">
+            <div class="hud-bar-row">
+              <div class="hud-cluster">
+                <div class="stat-item">
+                  <span class="stat-kicker">Время</span>
+                  <span class="stat-value accent-cyan" id="hudTime">60с</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                  <span class="stat-kicker">Монеты</span>
+                  <span class="stat-value accent-amber" id="hudCoins">0</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                  <span class="stat-kicker">Режим</span>
+                  <span class="stat-value" id="hudSpeedMode">НОРМА</span>
+                </div>
+              </div>
+
+              <div class="hud-actions">
+                <button
+                  type="button"
+                  class="icon-btn"
+                  id="btnMute"
+                  aria-label="Переключить звук"
+                  title="Звук [M]"
+                  tabindex="-1"
+                >
+                  <svg
+                    id="iconSoundOn"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                  </svg>
+                  <svg
+                    id="iconSoundOff"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="display: none"
+                  >
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  id="btnPause"
+                  aria-label="Пауза"
+                  title="Пауза [P]"
+                  tabindex="-1"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                    <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="hud-meters-row">
+              <div class="meter-box">
+                <div class="meter-header">
+                  <span class="meter-title" id="hudCargoTitle">Целостность</span>
+                  <span class="meter-readout" id="hudHpText">100%</span>
+                </div>
+                <div class="meter-track">
+                  <div class="meter-ghost" id="hudHpGhost"></div>
+                  <div class="meter-fill" id="hudHpFill"></div>
+                </div>
+              </div>
+
+              <div class="meter-box">
+                <div class="meter-header">
+                  <span class="meter-title">Маршрут</span>
+                  <span class="meter-readout" id="hudDistText">0 / 1500 м</span>
+                </div>
+                <div class="meter-track">
+                  <div
+                    class="meter-fill dist-fill"
+                    id="hudDistFill"
+                    style="transform: scaleX(0)"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-bottom">
+            <div class="touch-controls-bar">
+              <button
+                type="button"
+                class="ctrl-pad-btn"
+                id="btnSwipeLeft"
+                aria-label="Сместить влево"
+                tabindex="-1"
+              >
+                ← Полоса
+              </button>
+              <button
+                type="button"
+                class="ctrl-pad-btn"
+                id="btnBrake"
+                aria-label="Торможение"
+                tabindex="-1"
+              >
+                ↓ Тормоз
+              </button>
+              <button
+                type="button"
+                class="ctrl-pad-btn"
+                id="btnBoost"
+                aria-label="Ускорение"
+                tabindex="-1"
+              >
+                ↑ Форсаж
+              </button>
+              <button
+                type="button"
+                class="ctrl-pad-btn"
+                id="btnSwipeRight"
+                aria-label="Сместить вправо"
+                tabindex="-1"
+              >
+                Полоса →
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 1. Main Title Screen -->
+        <section
+          class="overlay-screen"
+          id="titleScreen"
+          aria-labelledby="titleHeading"
+        >
+          <div class="menu-top-bar">
+            <span class="wallet-label">Нео-Курьер v2.0</span>
+            <div class="wallet-display" aria-label="Баланс монет">
+              <span class="wallet-label">Баланс:</span>
+              <span class="wallet-amount" id="titleWalletAmount">150 М</span>
+            </div>
+          </div>
+
+          <div class="title-hero">
+            <svg
+              class="title-svg-emblem"
+              viewBox="0 0 96 96"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <polygon
+                points="48,6 88,28 88,68 48,90 8,68 8,28"
+                stroke="#00F0FF"
+                stroke-width="3"
+                fill="rgba(0, 240, 255, 0.08)"
+              />
+              <polygon
+                points="48,18 76,34 76,62 48,78 20,62 20,34"
+                stroke="#FF2A85"
+                stroke-width="2"
+                fill="rgba(255, 42, 133, 0.12)"
+              />
+              <path
+                d="M34 46L48 38L62 46V60L48 68L34 60V46Z"
+                fill="#00FF9D"
+                fill-opacity="0.22"
+                stroke="#00FF9D"
+                stroke-width="2.5"
+              />
+              <circle
+                cx="48"
+                cy="74"
+                r="8"
+                stroke="#00F0FF"
+                stroke-width="3"
+                fill="#05060D"
+              />
+            </svg>
+            <h1 class="game-title" id="titleHeading">RUSH DELIVERY</h1>
+            <p class="game-subtitle">
+              Выбирай контракты, удерживай равновесие хрупких грузов на
+              моноколесе и прокачивай экипировку в гараже.
+            </p>
+          </div>
+
+          <div class="modal-card">
+            <div class="briefing-list">
+              <div class="briefing-row">
+                <span class="briefing-index">01.</span>
+                <span>
+                  <strong>3 типа заказов:</strong> Пицца (100 М), Хрустальная
+                  ваза (250 М, сильная инерция) и Аквариум с пираньями (500 М,
+                  волны воды).
+                </span>
+              </div>
+              <div class="briefing-row">
+                <span class="briefing-index">02.</span>
+                <span>
+                  <strong>Баланс (Tilt):</strong> на краях (-100 / +100) груз
+                  бьется. Короткий свайп в сторону наклона помогает поймать
+                  равновесие.
+                </span>
+              </div>
+              <div class="briefing-row">
+                <span class="briefing-index">03.</span>
+                <span>
+                  <strong>Гараж:</strong> покупай Гиро-стабилизатор, Титановую
+                  упаковку и Магнит чаевых за заработанные монеты.
+                </span>
+              </div>
+            </div>
+
+            <div class="btn-stack">
+              <button
+                type="button"
+                class="primary-cta"
+                id="btnOpenOrders"
+                data-start="true"
+              >
+                Начать смену · Выбор заказа
+              </button>
+              <button type="button" class="secondary-cta" id="btnOpenGarage">
+                Гараж / Прокачка
+              </button>
+            </div>
+          </div>
+
+          <p class="control-hint-footer">
+            Свайпы · Стрелки / WASD · Пробел баланс · P пауза
+          </p>
+        </section>
+
+        <!-- 2. Order Selection Screen (3 Cards) -->
+        <section
+          class="overlay-screen hidden"
+          id="orderSelectScreen"
+          aria-labelledby="ordersHeading"
+        >
+          <div class="menu-top-bar">
+            <span class="wallet-label">Биржа контрактов</span>
+            <div class="wallet-display">
+              <span class="wallet-label">Баланс:</span>
+              <span class="wallet-amount" id="ordersWalletAmount">150 М</span>
+            </div>
+          </div>
+
+          <div class="modal-card">
+            <div class="result-header">
+              <span class="result-kicker">Дистанция 1500 м · Лимит 60 сек</span>
+              <h2 class="result-title" id="ordersHeading">Выбери заказ на смену</h2>
+              <p class="result-subtitle">
+                Кликни по карточке груза, чтобы немедленно выехать на трассу.
+              </p>
+            </div>
+
+            <div class="orders-list">
+              <!-- Card 1: Pizza Box -->
+              <button
+                type="button"
+                class="order-card order-easy"
+                data-order="pizza"
+                id="btnOrderPizza"
+              >
+                <div class="order-icon-box" aria-hidden="true">
+                  <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+                    <rect
+                      x="4"
+                      y="14"
+                      width="32"
+                      height="14"
+                      rx="3"
+                      fill="#2A1215"
+                      stroke="#00FF9D"
+                      stroke-width="2.2"
+                    />
+                    <path
+                      d="M14 21L26 21M20 15V27"
+                      stroke="#FFB800"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+                <div class="order-info">
+                  <div class="order-top-line">
+                    <span class="order-name">Коробка с пиццей</span>
+                    <span class="order-reward">+100 М</span>
+                  </div>
+                  <div class="order-meta" style="color: #00ff9d">
+                    Легкий · Рывок свайпа ±35
+                  </div>
+                  <div class="order-desc">
+                    Стандартный баланс и предсказуемый центр тяжести.
+                  </div>
+                </div>
+              </button>
+
+              <!-- Card 2: Crystal Vase -->
+              <button
+                type="button"
+                class="order-card order-medium"
+                data-order="vase"
+                id="btnOrderVase"
+              >
+                <div class="order-icon-box" aria-hidden="true">
+                  <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+                    <path
+                      d="M15 7H25L22 15L28 24L24 34H16L12 24L18 15L15 7Z"
+                      fill="#121E36"
+                      stroke="#00F0FF"
+                      stroke-width="2.2"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M18 15H22M14 24H26"
+                      stroke="#FF2A85"
+                      stroke-width="1.6"
+                    />
+                  </svg>
+                </div>
+                <div class="order-info">
+                  <div class="order-top-line">
+                    <span class="order-name">Хрустальная ваза</span>
+                    <span class="order-reward">+250 М</span>
+                  </div>
+                  <div class="order-meta" style="color: #00f0ff">
+                    Средний · Сильная раскачка ±50
+                  </div>
+                  <div class="order-desc">
+                    Высокий силуэт: свайпы сильнее раскачивают баланс (+50 вместо
+                    +35).
+                  </div>
+                </div>
+              </button>
+
+              <!-- Card 3: Piranha Aquarium -->
+              <button
+                type="button"
+                class="order-card order-hard"
+                data-order="aquarium"
+                id="btnOrderAquarium"
+              >
+                <div class="order-icon-box" aria-hidden="true">
+                  <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+                    <rect
+                      x="5"
+                      y="10"
+                      width="30"
+                      height="22"
+                      rx="4"
+                      fill="#091D2E"
+                      stroke="#FF2A85"
+                      stroke-width="2.2"
+                    />
+                    <path
+                      d="M7 19C12 16 16 22 21 19C26 16 30 22 33 19"
+                      stroke="#00F0FF"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                    <circle cx="16" cy="25" r="3" fill="#FFB800" />
+                    <polygon points="19,25 23,22 23,28" fill="#FFB800" />
+                  </svg>
+                </div>
+                <div class="order-info">
+                  <div class="order-top-line">
+                    <span class="order-name">Аквариум с пираньями</span>
+                    <span class="order-reward">+500 М</span>
+                  </div>
+                  <div class="order-meta" style="color: #ff2a85">
+                    Сложный · Эффект волны 3 сек
+                  </div>
+                  <div class="order-desc">
+                    После каждого свайпа вода внутри плещется и качает груз
+                    синусоидой 3 секунды.
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <div class="btn-row">
+              <button
+                type="button"
+                class="secondary-cta"
+                id="btnBackFromOrders"
+              >
+                ← В меню
+              </button>
+              <button
+                type="button"
+                class="secondary-cta"
+                id="btnOrdersToGarage"
+              >
+                Гараж / Прокачка
+              </button>
+            </div>
+          </div>
+
+          <p class="control-hint-footer">
+            Клавиши 1 / 2 / 3 или клик для быстрого выбора заказа
+          </p>
+        </section>
+
+        <!-- 3. Garage / Upgrades Screen -->
+        <section
+          class="overlay-screen hidden"
+          id="garageScreen"
+          aria-labelledby="garageHeading"
+        >
+          <div class="menu-top-bar">
+            <span class="wallet-label">Мастерская курьера</span>
+            <div class="wallet-display">
+              <span class="wallet-label">Баланс:</span>
+              <span class="wallet-amount" id="garageWalletAmount">150 М</span>
+            </div>
+          </div>
+
+          <div class="modal-card">
+            <div class="result-header">
+              <span class="result-kicker">Модификации моноколеса и контейнера</span>
+              <h2 class="result-title" id="garageHeading">Гараж / Прокачка</h2>
+              <p class="result-subtitle">
+                Все улучшения автоматически сохраняются в памяти терминала.
+              </p>
+            </div>
+
+            <div class="upgrades-list">
+              <!-- Upgrade 1: Gyro-Stabilizer -->
+              <div class="upgrade-row">
+                <div class="upgrade-top">
+                  <div class="upgrade-title-group">
+                    <span class="upgrade-name">Гиро-стабилизатор</span>
+                    <span class="upgrade-desc" id="descGyro">
+                      Уменьшает рывок баланса при свайпах на 15% / 30% / 45%.
+                    </span>
+                  </div>
+                </div>
+                <div class="upgrade-bottom">
+                  <div class="level-pips" id="pipsGyro">
+                    <span class="level-pip"></span>
+                    <span class="level-pip"></span>
+                    <span class="level-pip"></span>
+                    <span class="level-text" id="lvlTextGyro">0/3</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="buy-upgrade-btn"
+                    id="btnBuyGyro"
+                    data-upgrade="gyro"
+                  >
+                    150 М
+                  </button>
+                </div>
+              </div>
+
+              <!-- Upgrade 2: Titanium Packaging -->
+              <div class="upgrade-row">
+                <div class="upgrade-top">
+                  <div class="upgrade-title-group">
+                    <span class="upgrade-name">Титановая упаковка</span>
+                    <span class="upgrade-desc" id="descTitanium">
+                      Снижает урон по посылке от ударов и падений на 20% / 35% /
+                      50%.
+                    </span>
+                  </div>
+                </div>
+                <div class="upgrade-bottom">
+                  <div class="level-pips" id="pipsTitanium">
+                    <span class="level-pip"></span>
+                    <span class="level-pip"></span>
+                    <span class="level-pip"></span>
+                    <span class="level-text" id="lvlTextTitanium">0/3</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="buy-upgrade-btn"
+                    id="btnBuyTitanium"
+                    data-upgrade="titanium"
+                  >
+                    150 М
+                  </button>
+                </div>
+              </div>
+
+              <!-- Upgrade 3: Tip Magnet -->
+              <div class="upgrade-row">
+                <div class="upgrade-top">
+                  <div class="upgrade-title-group">
+                    <span class="upgrade-name">Магнит чаевых</span>
+                    <span class="upgrade-desc" id="descMagnet">
+                      Притягивает монеты с соседних полос (радиус и скорость
+                      растут).
+                    </span>
+                  </div>
+                </div>
+                <div class="upgrade-bottom">
+                  <div class="level-pips" id="pipsMagnet">
+                    <span class="level-pip"></span>
+                    <span class="level-pip"></span>
+                    <span class="level-pip"></span>
+                    <span class="level-text" id="lvlTextMagnet">0/3</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="buy-upgrade-btn"
+                    id="btnBuyMagnet"
+                    data-upgrade="magnet"
+                  >
+                    150 М
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button
+                type="button"
+                class="secondary-cta"
+                id="btnBackFromGarage"
+              >
+                ← В меню
+              </button>
+              <button
+                type="button"
+                class="primary-cta"
+                id="btnGarageToOrders"
+              >
+                К заказам →
+              </button>
+            </div>
+          </div>
+
+          <p class="control-hint-footer">
+            Прогресс и баланс автоматически сохраняются в localStorage
+          </p>
+        </section>
+
+        <!-- 4. Pause Modal -->
+        <section
+          class="overlay-screen hidden"
+          id="pauseScreen"
+          aria-labelledby="pauseHeading"
+        >
+          <div></div>
+          <div class="modal-card">
+            <div class="result-header">
+              <span class="result-kicker">Неоновый трафик на паузе</span>
+              <h2 class="result-title" id="pauseHeading">Смена приостановлена</h2>
+              <p class="result-subtitle">
+                Гироскоп моноколеса удерживает текущий наклон груза.
+              </p>
+            </div>
+
+            <button type="button" class="primary-cta" id="btnResumeShift">
+              Продолжить смену
+            </button>
+            <button type="button" class="secondary-cta" id="btnRestartFromPause">
+              Перезапустить этот заказ
+            </button>
+            <button type="button" class="secondary-cta" id="btnExitToTitle">
+              В главное меню
+            </button>
+          </div>
+          <p class="control-hint-footer">Нажми Esc или P для возврата в игру</p>
+        </section>
+
+        <!-- 5. Victory / Defeat Modal -->
+        <section
+          class="overlay-screen hidden"
+          id="gameOverScreen"
+          aria-labelledby="resultHeading"
+        >
+          <div class="menu-top-bar">
+            <span class="wallet-label">Итог рейса</span>
+            <div class="wallet-display">
+              <span class="wallet-label">Всего на счету:</span>
+              <span class="wallet-amount" id="resultWalletAmount">150 М</span>
+            </div>
+          </div>
+
+          <div class="modal-card">
+            <div class="result-header">
+              <span class="result-kicker" id="resultKicker">Отчет курьера</span>
+              <h2 class="result-title" id="resultHeading">Смена завершена!</h2>
+              <p class="result-subtitle" id="resultSubtitle">
+                Заказ доставлен в неоновый сектор вовремя.
+              </p>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-tile">
+                <div class="stat-tile-label">Дистанция</div>
+                <div class="stat-tile-val" id="resDistance">1500 м</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-tile-label">Сохранность</div>
+                <div class="stat-tile-val" id="resHp">100%</div>
+              </div>
+              <div class="stat-tile">
+                <div class="stat-tile-label">Ранг</div>
+                <div class="stat-tile-val" id="resGrade">S+</div>
+              </div>
+            </div>
+
+            <div class="receipt-box">
+              <div class="receipt-line">
+                <span id="resOrderLabel">Оплата по заказу</span>
+                <span class="mono" id="resBasePay">+100 М</span>
+              </div>
+              <div class="receipt-line">
+                <span>Чаевые за целостность груза</span>
+                <span class="mono" id="resConditionTip">+60 М</span>
+              </div>
+              <div class="receipt-line">
+                <span>Бонус за запас времени</span>
+                <span class="mono" id="resSpeedTip">+80 М</span>
+              </div>
+              <div class="receipt-line">
+                <span>Собранные монеты на трассе</span>
+                <span class="mono" id="resCoinBonus">+150 М</span>
+              </div>
+              <div class="receipt-total">
+                <span class="receipt-total-label">Начислено на баланс</span>
+                <span class="receipt-total-val" id="resTotalPay">+390 М</span>
+              </div>
+            </div>
+
+            <div class="btn-stack">
+              <button
+                type="button"
+                class="primary-cta"
+                id="btnPlayAgain"
+                data-start="true"
+              >
+                Выбрать следующий заказ
+              </button>
+              <button
+                type="button"
+                class="secondary-cta"
+                id="btnResultToGarage"
+              >
+                В Гараж / Прокачка
+              </button>
+            </div>
+          </div>
+          <p class="control-hint-footer">
+            Нажми Enter или Пробел для выбора нового заказа
+          </p>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        'use strict';
+
+        // Block iOS Safari / mobile browser elastic scroll and pinch-zoom
+        document.addEventListener(
+          'touchmove',
+          function (e) {
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+        document.addEventListener(
+          'gesturestart',
+          function (e) {
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+
+        // ============================================================================
+        // 1. PROCEDURAL WEB AUDIO SYNTHESIZER (SoundEngine)
+        // ============================================================================
+        class SoundEngine {
+          constructor() {
+            this.ctx = null;
+            this.muted = false;
+            this.noiseBuffer = null;
+          }
+
+          init() {
+            if (!this.ctx) {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              if (AudioCtx) {
+                this.ctx = new AudioCtx();
+              }
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+              this.ctx.resume().catch(() => {});
+            }
+            if (this.ctx && !this.noiseBuffer) {
+              const sampleRate = this.ctx.sampleRate;
+              const length = Math.floor(sampleRate * 0.6);
+              const buffer = this.ctx.createBuffer(1, length, sampleRate);
+              const data = buffer.getChannelData(0);
+              for (let i = 0; i < length; i++) {
+                data[i] = Math.random() * 2 - 1;
+              }
+              this.noiseBuffer = buffer;
+            }
+          }
+
+          toggleMute() {
+            this.muted = !this.muted;
+            if (!this.muted) {
+              this.init();
+            }
+            return this.muted;
+          }
+
+          playTone(freqStart, freqEnd, duration, type = 'sine', gainVal = 0.12, delaySec = 0) {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime + delaySec;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(Math.max(20, freqStart), now);
+            osc.frequency.exponentialRampToValueAtTime(
+              Math.max(20, freqEnd),
+              now + duration
+            );
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.linearRampToValueAtTime(gainVal, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + duration + 0.01);
+          }
+
+          // Короткий футуристичный «вжух» (свист резонансного фильтра) при свайпе влево/вправо
+          swipe(caughtBalance = false) {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime;
+            const dur = 0.14;
+
+            if (this.noiseBuffer) {
+              const noise = this.ctx.createBufferSource();
+              noise.buffer = this.noiseBuffer;
+
+              const filter = this.ctx.createBiquadFilter();
+              filter.type = 'bandpass';
+              filter.Q.setValueAtTime(caughtBalance ? 7.0 : 5.2, now);
+              filter.frequency.setValueAtTime(caughtBalance ? 420 : 280, now);
+              filter.frequency.exponentialRampToValueAtTime(
+                caughtBalance ? 3200 : 2450,
+                now + dur
+              );
+
+              const gain = this.ctx.createGain();
+              gain.gain.setValueAtTime(0.001, now);
+              gain.gain.linearRampToValueAtTime(0.18, now + 0.025);
+              gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+              noise.connect(filter);
+              filter.connect(gain);
+              gain.connect(this.ctx.destination);
+
+              noise.start(now);
+              noise.stop(now + dur + 0.01);
+            }
+
+            if (caughtBalance) {
+              this.playTone(380, 760, 0.12, 'triangle', 0.11);
+            } else {
+              this.playTone(210, 520, 0.11, 'sine', 0.09);
+            }
+          }
+
+          // Приятный высокий звон (два быстрых тона мажорного аккорда) при сборе монеты
+          coin() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            // Два быстрых высоких тона мажорного трезвучия (C6 -> E6 + легкий обертон G6)
+            this.playTone(1046.5, 1052.0, 0.11, 'sine', 0.14, 0);
+            this.playTone(1318.51, 1326.0, 0.17, 'triangle', 0.15, 0.065);
+            this.playTone(1567.98, 1572.0, 0.14, 'sine', 0.07, 0.065);
+          }
+
+          // Тревожный прерывистый писк (бип-бип) в опасной красной зоне баланса (>75 или <-75)
+          dangerBeep() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            this.playTone(932.33, 880.0, 0.055, 'square', 0.065, 0);
+            this.playTone(1046.5, 987.77, 0.055, 'square', 0.07, 0.08);
+          }
+
+          // Мощный низкочастотный взрыв (шум + спад частоты) при ударе или потере HP груза
+          explosion() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const now = this.ctx.currentTime;
+            const dur = 0.44;
+
+            // 1. Filtered noise blast with falling lowpass cutoff
+            if (this.noiseBuffer) {
+              const noise = this.ctx.createBufferSource();
+              noise.buffer = this.noiseBuffer;
+
+              const filter = this.ctx.createBiquadFilter();
+              filter.type = 'lowpass';
+              filter.Q.setValueAtTime(2.4, now);
+              filter.frequency.setValueAtTime(980, now);
+              filter.frequency.exponentialRampToValueAtTime(55, now + dur);
+
+              const nGain = this.ctx.createGain();
+              nGain.gain.setValueAtTime(0.28, now);
+              nGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+              noise.connect(filter);
+              filter.connect(nGain);
+              nGain.connect(this.ctx.destination);
+
+              noise.start(now);
+              noise.stop(now + dur + 0.02);
+            }
+
+            // 2. Sub-bass frequency drop (165 Hz -> 28 Hz)
+            this.playTone(165, 28, dur, 'sawtooth', 0.22, 0);
+            this.playTone(110, 24, dur * 0.95, 'sine', 0.24, 0);
+          }
+
+          crash() {
+            this.explosion();
+          }
+
+          boost() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+            this.playTone(180, 660, 0.22, 'sawtooth', 0.095, 0);
+            this.playTone(360, 880, 0.18, 'triangle', 0.08, 0.03);
+          }
+
+          brake() {
+            this.playTone(420, 150, 0.15, 'triangle', 0.09, 0);
+          }
+
+          upgrade() {
+            this.playTone(523.25, 783.99, 0.11, 'triangle', 0.13, 0);
+            this.playTone(783.99, 1046.5, 0.16, 'sine', 0.14, 0.07);
+          }
+
+          // Победная мелодия на финише
+          victory() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const melody = [
+              { f: 523.25, d: 0.12, t: 0.0 },   // C5
+              { f: 659.25, d: 0.12, t: 0.09 },  // E5
+              { f: 783.99, d: 0.12, t: 0.18 },  // G5
+              { f: 1046.5, d: 0.16, t: 0.27 },  // C6
+              { f: 783.99, d: 0.11, t: 0.42 },  // G5
+              { f: 1046.5, d: 0.36, t: 0.52 },  // C6
+              { f: 1318.51, d: 0.36, t: 0.52 }, // E6 harmony
+            ];
+            melody.forEach((n) => {
+              this.playTone(n.f, n.f * 1.008, n.d, 'triangle', 0.13, n.t);
+            });
+          }
+
+          defeat() {
+            if (this.muted) return;
+            this.init();
+            if (!this.ctx) return;
+
+            const notes = [392.0, 349.23, 311.13, 233.08];
+            notes.forEach((n, idx) => {
+              this.playTone(n, n * 0.94, 0.22, 'sawtooth', 0.11, idx * 0.11);
+            });
+          }
+        }
+
+        const sound = new SoundEngine();
+        const audio = sound;
+
+        // ============================================================================
+        // 1B. HAPTIC FEEDBACK (Vibration API with Safe iOS Safari Fallback)
+        // ============================================================================
+        function triggerHaptic(pattern = 12) {
+          try {
+            if (
+              typeof navigator !== 'undefined' &&
+              typeof navigator.vibrate === 'function'
+            ) {
+              navigator.vibrate(pattern);
+            }
+          } catch (e) {
+            // Safe no-op on iOS Safari where navigator.vibrate is unsupported
+          }
+        }
+
+        function attachTouchPulseFeedback() {
+          const buttons = document.querySelectorAll(
+            'button, .order-card, .ctrl-pad-btn, .icon-btn, .primary-cta, .secondary-cta, .buy-upgrade-btn'
+          );
+          buttons.forEach((btn) => {
+            const triggerVisualPulse = () => {
+              if (btn.disabled) return;
+              btn.classList.remove('touch-pulse');
+              void btn.offsetWidth;
+              btn.classList.add('touch-pulse');
+              triggerHaptic(10);
+            };
+            btn.addEventListener('touchstart', triggerVisualPulse, {
+              passive: true,
+            });
+            btn.addEventListener('mousedown', triggerVisualPulse);
+            btn.addEventListener('animationend', () => {
+              btn.classList.remove('touch-pulse');
+            });
+          });
+        }
+
+        // ============================================================================
+        // 2. ORDERS, UPGRADES & LOCALSTORAGE PERSISTENCE
+        // ============================================================================
+        const STORAGE_KEY = 'rush_delivery_save_v1';
+
+        const ORDERS = {
+          pizza: {
+            id: 'pizza',
+            title: 'Коробка с пиццей',
+            shortTitle: 'Пицца',
+            difficulty: 'Легкий',
+            basePay: 100,
+            swipeImpulse: 35,
+            hasWaveSlosh: false,
+          },
+          vase: {
+            id: 'vase',
+            title: 'Хрустальная ваза',
+            shortTitle: 'Ваза',
+            difficulty: 'Средний',
+            basePay: 250,
+            swipeImpulse: 50,
+            hasWaveSlosh: false,
+          },
+          aquarium: {
+            id: 'aquarium',
+            title: 'Аквариум с пираньями',
+            shortTitle: 'Аквариум',
+            difficulty: 'Сложный',
+            basePay: 500,
+            swipeImpulse: 38,
+            hasWaveSlosh: true,
+          },
+        };
+
+        const UPGRADE_CONFIG = {
+          costs: [150, 350, 700],
+          gyroReduction: [0, 0.15, 0.3, 0.45], // -15% / -30% / -45% swipe impulse
+          titaniumReduction: [0, 0.2, 0.35, 0.5], // -20% / -35% / -50% damage
+          magnetLaneRange: [0, 1.15, 1.65, 2.25], // lane attraction radius
+          magnetPullSpeed: [0, 3.6, 5.5, 8.2],
+        };
+
+        const CONFIG = {
+          TARGET_DISTANCE: 1500,
+          TIME_LIMIT: 60,
+          INITIAL_HP: 100,
+          TILT_LIMIT: 100,
+          DANGER_TILT: 75,
+          TILT_DAMAGE: 25,
+          OBSTACLE_DAMAGE: 35,
+          BASE_SPEED: 26.5,
+          BOOST_SPEED: 42.0,
+          BRAKE_SPEED: 15.5,
+          LANE_LERP_SPEED: 13.5,
+        };
+
+        let profile = {
+          wallet: 150,
+          muted: false,
+          upgrades: {
+            gyro: 0,
+            titanium: 0,
+            magnet: 0,
+          },
+        };
+
+        function loadProfile() {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (typeof parsed.wallet === 'number' && !Number.isNaN(parsed.wallet)) {
+                profile.wallet = Math.max(0, Math.floor(parsed.wallet));
+              }
+              if (typeof parsed.muted === 'boolean') {
+                profile.muted = parsed.muted;
+                sound.muted = parsed.muted;
+              }
+              if (parsed.upgrades && typeof parsed.upgrades === 'object') {
+                profile.upgrades.gyro = Math.max(
+                  0,
+                  Math.min(3, Number(parsed.upgrades.gyro) || 0)
+                );
+                profile.upgrades.titanium = Math.max(
+                  0,
+                  Math.min(3, Number(parsed.upgrades.titanium) || 0)
+                );
+                profile.upgrades.magnet = Math.max(
+                  0,
+                  Math.min(3, Number(parsed.upgrades.magnet) || 0)
+                );
+              }
+            } else {
+              saveProfile();
+            }
+          } catch (e) {
+            // Ignore storage errors in restricted environments
+          }
+        }
+
+        function saveProfile() {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+          } catch (e) {
+            // Ignore storage errors
+          }
+          syncGarageAndWalletUI();
+        }
+
+        function getEffectiveSwipeImpulse(orderId) {
+          const order = ORDERS[orderId] || ORDERS.pizza;
+          const red = UPGRADE_CONFIG.gyroReduction[profile.upgrades.gyro] || 0;
+          return order.swipeImpulse * (1 - red);
+        }
+
+        function getEffectiveDamage(baseDmg) {
+          const red = UPGRADE_CONFIG.titaniumReduction[profile.upgrades.titanium] || 0;
+          return Math.round(baseDmg * (1 - red));
+        }
+
+        // ============================================================================
+        // 3. DOM ELEMENTS & CANVAS SETUP
+        // ============================================================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const viewportEl = document.getElementById('gameViewport');
+        const hudTopEl = document.querySelector('.hud-top');
+
+        const titleScreen = document.getElementById('titleScreen');
+        const orderSelectScreen = document.getElementById('orderSelectScreen');
+        const garageScreen = document.getElementById('garageScreen');
+        const pauseScreen = document.getElementById('pauseScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+
+        const titleWalletAmount = document.getElementById('titleWalletAmount');
+        const ordersWalletAmount = document.getElementById('ordersWalletAmount');
+        const garageWalletAmount = document.getElementById('garageWalletAmount');
+        const resultWalletAmount = document.getElementById('resultWalletAmount');
+
+        const hudTime = document.getElementById('hudTime');
+        const hudCoins = document.getElementById('hudCoins');
+        const hudSpeedMode = document.getElementById('hudSpeedMode');
+        const hudCargoTitle = document.getElementById('hudCargoTitle');
+        const hudHpText = document.getElementById('hudHpText');
+        const hudHpFill = document.getElementById('hudHpFill');
+        const hudHpGhost = document.getElementById('hudHpGhost');
+        const hudDistText = document.getElementById('hudDistText');
+        const hudDistFill = document.getElementById('hudDistFill');
+
+        const btnOpenOrders = document.getElementById('btnOpenOrders');
+        const btnOpenGarage = document.getElementById('btnOpenGarage');
+        const btnBackFromOrders = document.getElementById('btnBackFromOrders');
+        const btnOrdersToGarage = document.getElementById('btnOrdersToGarage');
+        const btnBackFromGarage = document.getElementById('btnBackFromGarage');
+        const btnGarageToOrders = document.getElementById('btnGarageToOrders');
+
+        const btnOrderPizza = document.getElementById('btnOrderPizza');
+        const btnOrderVase = document.getElementById('btnOrderVase');
+        const btnOrderAquarium = document.getElementById('btnOrderAquarium');
+
+        const btnBuyGyro = document.getElementById('btnBuyGyro');
+        const btnBuyTitanium = document.getElementById('btnBuyTitanium');
+        const btnBuyMagnet = document.getElementById('btnBuyMagnet');
+
+        const btnResumeShift = document.getElementById('btnResumeShift');
+        const btnRestartFromPause = document.getElementById('btnRestartFromPause');
+        const btnExitToTitle = document.getElementById('btnExitToTitle');
+        const btnPlayAgain = document.getElementById('btnPlayAgain');
+        const btnResultToGarage = document.getElementById('btnResultToGarage');
+        const btnPause = document.getElementById('btnPause');
+        const btnMute = document.getElementById('btnMute');
+        const iconSoundOn = document.getElementById('iconSoundOn');
+        const iconSoundOff = document.getElementById('iconSoundOff');
+
+        const btnSwipeLeft = document.getElementById('btnSwipeLeft');
+        const btnSwipeRight = document.getElementById('btnSwipeRight');
+        const btnBoost = document.getElementById('btnBoost');
+        const btnBrake = document.getElementById('btnBrake');
+
+        let cw = 390;
+        let ch = 844;
+        let dpr = 1;
+
+        function resizeCanvas() {
+          const rect = viewportEl.getBoundingClientRect();
+          cw = Math.max(320, Math.round(rect.width));
+          ch = Math.max(540, Math.round(rect.height));
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = cw * dpr;
+          canvas.height = ch * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function syncMuteButtonUI() {
+          const isMuted = sound.muted;
+          iconSoundOn.style.display = isMuted ? 'none' : 'block';
+          iconSoundOff.style.display = isMuted ? 'block' : 'none';
+          btnMute.classList.toggle('is-muted', isMuted);
+          btnMute.setAttribute(
+            'aria-label',
+            isMuted ? 'Включить звук' : 'Выключить звук'
+          );
+        }
+
+        function syncGarageAndWalletUI() {
+          const formatted = profile.wallet + ' М';
+          titleWalletAmount.textContent = formatted;
+          ordersWalletAmount.textContent = formatted;
+          garageWalletAmount.textContent = formatted;
+          resultWalletAmount.textContent = formatted;
+          syncMuteButtonUI();
+
+          const tracks = [
+            {
+              key: 'gyro',
+              pipsEl: document.getElementById('pipsGyro'),
+              lvlTextEl: document.getElementById('lvlTextGyro'),
+              btnEl: btnBuyGyro,
+            },
+            {
+              key: 'titanium',
+              pipsEl: document.getElementById('pipsTitanium'),
+              lvlTextEl: document.getElementById('lvlTextTitanium'),
+              btnEl: btnBuyTitanium,
+            },
+            {
+              key: 'magnet',
+              pipsEl: document.getElementById('pipsMagnet'),
+              lvlTextEl: document.getElementById('lvlTextMagnet'),
+              btnEl: btnBuyMagnet,
+            },
+          ];
+
+          tracks.forEach((t) => {
+            const lvl = profile.upgrades[t.key] || 0;
+            const pips = t.pipsEl.querySelectorAll('.level-pip');
+            pips.forEach((pip, idx) => {
+              pip.classList.toggle('filled', idx < lvl);
+            });
+            t.lvlTextEl.textContent = lvl + '/3';
+
+            if (lvl >= 3) {
+              t.btnEl.textContent = 'МАКС.';
+              t.btnEl.disabled = true;
+            } else {
+              const cost = UPGRADE_CONFIG.costs[lvl];
+              t.btnEl.textContent = 'Купить · ' + cost + ' М';
+              t.btnEl.disabled = profile.wallet < cost;
+            }
+          });
+        }
+
+        function purchaseUpgrade(key) {
+          const lvl = profile.upgrades[key] || 0;
+          if (lvl >= 3) return;
+          const cost = UPGRADE_CONFIG.costs[lvl];
+          if (profile.wallet < cost) return;
+
+          profile.wallet -= cost;
+          profile.upgrades[key] = lvl + 1;
+          sound.upgrade();
+          saveProfile();
+        }
+
+        // ============================================================================
+        // 4. POOLED PARTICLES, NEON SPARKS, SPEED LINES & FLOATING TEXTS
+        // ============================================================================
+        const MAX_PARTICLES = 150;
+        const particles = Array.from({ length: MAX_PARTICLES }, () => ({
+          active: false,
+          x: 0,
+          y: 0,
+          vx: 0,
+          vy: 0,
+          size: 3,
+          alpha: 1,
+          decay: 1.5,
+          color: '#00f0ff',
+          isSpark: false,
+          gravity: 0,
+        }));
+        let particleCursor = 0;
+
+        function spawnParticle(
+          x,
+          y,
+          vx,
+          vy,
+          size,
+          color,
+          decay = 1.8,
+          isSpark = false,
+          gravity = 0
+        ) {
+          const p = particles[particleCursor];
+          particleCursor = (particleCursor + 1) % MAX_PARTICLES;
+          p.active = true;
+          p.x = x;
+          p.y = y;
+          p.vx = vx;
+          p.vy = vy;
+          p.size = size;
+          p.alpha = 1;
+          p.color = color;
+          p.decay = decay;
+          p.isSpark = isSpark;
+          p.gravity = gravity;
+        }
+
+        // Разлет неоновых искр при столкновении или сборе монеты
+        function spawnNeonSparks(x, y, count, palette, minSpd = 90, maxSpd = 260) {
+          for (let i = 0; i < count; i++) {
+            const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.45;
+            const spd = minSpd + Math.random() * (maxSpd - minSpd);
+            const color = palette[i % palette.length];
+            spawnParticle(
+              x,
+              y,
+              Math.cos(angle) * spd,
+              Math.sin(angle) * spd - 25,
+              2.2 + Math.random() * 2.2,
+              color,
+              1.6 + Math.random() * 0.8,
+              true,
+              240
+            );
+          }
+        }
+
+        // Линии скорости (speed lines) по краям экрана при ускорении (Boost)
+        const SPEED_LINE_COUNT = 28;
+        const speedLines = Array.from({ length: SPEED_LINE_COUNT }, (_, idx) => ({
+          side: idx % 2 === 0 ? -1 : 1,
+          edgeOffset: 4 + (idx % 7) * 6,
+          yFrac: (idx / SPEED_LINE_COUNT) % 1,
+          length: 45 + (idx % 5) * 22,
+          speed: 1.5 + (idx % 4) * 0.35,
+          color: idx % 3 === 0 ? '#ff2a85' : '#00f0ff',
+        }));
+
+        const floatingTexts = [];
+        function addFloatingText(text, x, y, color = '#00f0ff', scale = 1.0) {
+          const clampedX = Math.max(68, Math.min(cw - 68, x));
+          floatingTexts.push({
+            text,
+            x: clampedX,
+            y,
+            vy: -64,
+            alpha: 1,
+            age: 0,
+            scale,
+            color,
+          });
+        }
+
+        // ============================================================================
+        // 5. GAME STATE & CORE ENTITIES
+        // ============================================================================
+        const state = {
+          mode: 'title', // 'title' | 'orders' | 'garage' | 'playing' | 'paused' | 'gameover'
+          selectedOrder: 'pizza', // 'pizza' | 'vase' | 'aquarium'
+          distance: 0,
+          timeLeft: CONFIG.TIME_LIMIT,
+          hp: CONFIG.INITIAL_HP,
+          coins: 0,
+          lane: 1,
+          visualLane: 1,
+          speedMode: 'normal',
+          speedTimer: 0,
+          boostVisual: 0, // 0..1 smooth intensity for speed lines
+          currentSpeed: CONFIG.BASE_SPEED,
+          tilt: 0,
+          tiltVelocity: 0,
+          waveTimer: 0, // 3-second sinusoidal slosh timer for aquarium
+          wavePhase: 0,
+          dangerBeepTimer: 0,
+          dangerPopupTimer: 0,
+          wasInDangerZone: false,
+          timeSinceLastSwipe: 1.0,
+          roadScroll: 0,
+          shakeTrauma: 0,
+          flashAlpha: 0,
+          flashColor: '#ff3355',
+          hitstopTimer: 0,
+          invulnTimer: 0,
+          spawnTimer: 0.7,
+          coinSpawnTimer: 0.45,
+          elapsedTime: 0,
+          obstacles: [],
+          pickups: [],
+          endSnapshot: null,
+        };
+
+        function setBodyState(nextMode) {
+          state.mode = nextMode;
+          document.body.dataset.state = nextMode;
+          titleScreen.classList.toggle('hidden', nextMode !== 'title');
+          orderSelectScreen.classList.toggle('hidden', nextMode !== 'orders');
+          garageScreen.classList.toggle('hidden', nextMode !== 'garage');
+          pauseScreen.classList.toggle('hidden', nextMode !== 'paused');
+          gameOverScreen.classList.toggle('hidden', nextMode !== 'gameover');
+          syncGarageAndWalletUI();
+        }
+
+        function resetGame(orderId) {
+          if (orderId && ORDERS[orderId]) {
+            state.selectedOrder = orderId;
+          }
+          const order = ORDERS[state.selectedOrder];
+          hudCargoTitle.textContent = order.shortTitle + ' · HP';
+
+          state.distance = 0;
+          state.timeLeft = CONFIG.TIME_LIMIT;
+          state.hp = CONFIG.INITIAL_HP;
+          state.coins = 0;
+          state.lane = 1;
+          state.visualLane = 1;
+          state.speedMode = 'normal';
+          state.speedTimer = 0;
+          state.boostVisual = 0;
+          state.currentSpeed = CONFIG.BASE_SPEED;
+          state.tilt = 0;
+          state.tiltVelocity = 0;
+          state.waveTimer = 0;
+          state.wavePhase = 0;
+          state.dangerBeepTimer = 0;
+          state.dangerPopupTimer = 0;
+          state.wasInDangerZone = false;
+          state.timeSinceLastSwipe = 1.0;
+          state.shakeTrauma = 0;
+          state.flashAlpha = 0;
+          state.hitstopTimer = 0;
+          state.invulnTimer = 0;
+          state.spawnTimer = 1.1;
+          state.coinSpawnTimer = 0.5;
+          state.elapsedTime = 0;
+          state.obstacles.length = 0;
+          state.pickups.length = 0;
+          floatingTexts.length = 0;
+          state.endSnapshot = null;
+
+          // Seed welcoming coins ahead on the open center lane
+          for (let i = 0; i < 3; i++) {
+            state.pickups.push({
+              lane: 1,
+              visualLane: 1,
+              y: ch * 0.42 - i * 68,
+              radius: 14,
+              spin: i * 0.8,
+              magnetized: false,
+            });
+          }
+
+          updateHudDom(true);
+        }
+
+        function startShiftWithOrder(orderId) {
+          if (
+            document.activeElement &&
+            typeof document.activeElement.blur === 'function'
+          ) {
+            document.activeElement.blur();
+          }
+          sound.init();
+          resetGame(orderId || state.selectedOrder);
+          setBodyState('playing');
+        }
+
+        // ============================================================================
+        // 6. CONTROLS: SWIPES, KEYBOARD & TACTICAL BUTTONS
+        // ============================================================================
+        function triggerHorizontalSwipe(direction) {
+          if (state.mode !== 'playing') return;
+
+          const prevLane = state.lane;
+          state.lane = Math.max(0, Math.min(2, state.lane + direction));
+          state.timeSinceLastSwipe = 0;
+
+          const impulse = getEffectiveSwipeImpulse(state.selectedOrder);
+          const inertiaDelta = -direction * impulse;
+
+          const caughtBalance =
+            (state.tilt > 15 && direction === 1) ||
+            (state.tilt < -15 && direction === -1);
+
+          state.tilt += inertiaDelta;
+          state.tiltVelocity += inertiaDelta * 0.45;
+
+          // Activate 3-second sinusoidal water slosh if carrying Piranha Aquarium
+          if (ORDERS[state.selectedOrder].hasWaveSlosh) {
+            state.waveTimer = 3.0;
+          }
+
+          const px = getLaneX(state.visualLane, getPlayerY());
+          if (caughtBalance) {
+            state.tiltVelocity *= 0.35;
+            addFloatingText('БАЛАНС ПОЙМАН!', px, getPlayerY() - 94, '#00ff9d', 1.05);
+            spawnNeonSparks(px, getPlayerY() - 48, 8, ['#00ff9d', '#00f0ff'], 60, 140);
+          } else if (prevLane !== state.lane) {
+            for (let i = 0; i < 10; i++) {
+              spawnParticle(
+                px,
+                getPlayerY() + 18,
+                -direction * (50 + Math.random() * 95),
+                20 + Math.random() * 65,
+                2.5 + Math.random() * 2,
+                '#00f0ff',
+                2.2,
+                true,
+                80
+              );
+            }
+          }
+
+          sound.swipe(caughtBalance);
+          triggerHaptic(caughtBalance ? [12, 24, 18] : 14);
+        }
+
+        function triggerVerticalSwipe(verticalDir) {
+          if (state.mode !== 'playing') return;
+          const px = getLaneX(state.visualLane, getPlayerY());
+          if (verticalDir === 1) {
+            state.speedMode = 'boost';
+            state.speedTimer = 3.4;
+            sound.boost();
+            triggerHaptic([16, 20, 24]);
+            addFloatingText('УСКОРЕНИЕ!', px, getPlayerY() - 88, '#ff2a85', 1.25);
+            spawnNeonSparks(px, getPlayerY() + 16, 12, ['#ff2a85', '#00f0ff'], 80, 190);
+          } else if (verticalDir === -1) {
+            if (state.speedMode === 'boost') {
+              state.speedMode = 'normal';
+              state.speedTimer = 0;
+            } else {
+              state.speedMode = 'brake';
+              state.speedTimer = 2.2;
+            }
+            sound.brake();
+            triggerHaptic(14);
+            addFloatingText('ТОРМОЗ / БАЛАНС', px, getPlayerY() - 84, '#ffb800', 1.05);
+          }
+          updateSpeedButtonsUI();
+        }
+
+        function triggerQuickStabilize() {
+          if (state.mode !== 'playing') return;
+          if (Math.abs(state.tilt) > 4 || state.waveTimer > 0) {
+            state.tilt *= 0.52;
+            state.tiltVelocity *= 0.25;
+            state.waveTimer *= 0.65;
+            sound.swipe(true);
+            triggerHaptic([10, 20, 14]);
+            addFloatingText(
+              'СТАБИЛИЗАЦИЯ!',
+              getLaneX(state.visualLane, getPlayerY()),
+              getPlayerY() - 88,
+              '#00ff9d',
+              1.05
+            );
+          }
+        }
+
+        // Touch & Pointer Swipe Recognition on Canvas
+        let pointerStartX = null;
+        let pointerStartY = null;
+        let pointerStartTime = 0;
+
+        function onPointerDown(clientX, clientY) {
+          if (state.mode !== 'playing') return;
+          sound.init();
+          pointerStartX = clientX;
+          pointerStartY = clientY;
+          pointerStartTime = performance.now();
+        }
+
+        function onPointerUp(clientX, clientY) {
+          if (state.mode !== 'playing' || pointerStartX === null) return;
+          const dx = clientX - pointerStartX;
+          const dy = clientY - pointerStartY;
+          const elapsed = performance.now() - pointerStartTime;
+          pointerStartX = null;
+          pointerStartY = null;
+
+          const absX = Math.abs(dx);
+          const absY = Math.abs(dy);
+          const minSwipe = 24;
+
+          if (Math.max(absX, absY) < minSwipe) {
+            if (elapsed < 260) {
+              const rect = canvas.getBoundingClientRect();
+              const relX = (clientX - rect.left) / Math.max(1, rect.width);
+              if (relX < 0.32) {
+                triggerHorizontalSwipe(-1);
+              } else if (relX > 0.68) {
+                triggerHorizontalSwipe(1);
+              } else {
+                triggerQuickStabilize();
+              }
+            }
+            return;
+          }
+
+          if (absX >= absY) {
+            triggerHorizontalSwipe(dx > 0 ? 1 : -1);
+          } else {
+            triggerVerticalSwipe(dy < 0 ? 1 : -1);
+          }
+        }
+
+        canvas.addEventListener(
+          'touchstart',
+          function (e) {
+            if (e.changedTouches && e.changedTouches.length > 0) {
+              const t = e.changedTouches[0];
+              onPointerDown(t.clientX, t.clientY);
+            }
+          },
+          { passive: true }
+        );
+
+        canvas.addEventListener(
+          'touchend',
+          function (e) {
+            if (e.changedTouches && e.changedTouches.length > 0) {
+              const t = e.changedTouches[0];
+              onPointerUp(t.clientX, t.clientY);
+            }
+          },
+          { passive: true }
+        );
+
+        canvas.addEventListener('mousedown', function (e) {
+          onPointerDown(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('mouseup', function (e) {
+          onPointerUp(e.clientX, e.clientY);
+        });
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', function (e) {
+          if (e.repeat) return;
+
+          if (e.code === 'KeyM') {
+            e.preventDefault();
+            handleMuteToggle();
+            return;
+          }
+
+          if (state.mode === 'title') {
+            if (e.code === 'Enter' || e.code === 'Space') {
+              e.preventDefault();
+              sound.init();
+              setBodyState('orders');
+            }
+            return;
+          }
+
+          if (state.mode === 'orders') {
+            if (e.code === 'Digit1' || e.code === 'Enter' || e.code === 'Space') {
+              e.preventDefault();
+              startShiftWithOrder('pizza');
+            } else if (e.code === 'Digit2') {
+              e.preventDefault();
+              startShiftWithOrder('vase');
+            } else if (e.code === 'Digit3') {
+              e.preventDefault();
+              startShiftWithOrder('aquarium');
+            } else if (e.code === 'Escape') {
+              e.preventDefault();
+              setBodyState('title');
+            }
+            return;
+          }
+
+          if (state.mode === 'garage') {
+            if (e.code === 'Escape') {
+              e.preventDefault();
+              setBodyState('title');
+            }
+            return;
+          }
+
+          if (state.mode === 'gameover') {
+            if (e.code === 'Enter' || e.code === 'Space') {
+              e.preventDefault();
+              setBodyState('orders');
+            }
+            return;
+          }
+
+          if (e.code === 'Escape' || e.code === 'KeyP') {
+            e.preventDefault();
+            togglePause();
+            return;
+          }
+
+          if (state.mode !== 'playing') return;
+
+          if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+            e.preventDefault();
+            triggerHorizontalSwipe(-1);
+          } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+            e.preventDefault();
+            triggerHorizontalSwipe(1);
+          } else if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+            e.preventDefault();
+            triggerVerticalSwipe(1);
+          } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+            e.preventDefault();
+            triggerVerticalSwipe(-1);
+          } else if (e.code === 'Space') {
+            e.preventDefault();
+            triggerQuickStabilize();
+          }
+        });
+
+        // Menu Navigation & Order / Upgrade Button Handlers
+        btnOpenOrders.addEventListener('click', function () {
+          sound.init();
+          setBodyState('orders');
+        });
+        btnOpenGarage.addEventListener('click', function () {
+          sound.init();
+          setBodyState('garage');
+        });
+        btnBackFromOrders.addEventListener('click', function () {
+          setBodyState('title');
+        });
+        btnOrdersToGarage.addEventListener('click', function () {
+          setBodyState('garage');
+        });
+        btnBackFromGarage.addEventListener('click', function () {
+          setBodyState('title');
+        });
+        btnGarageToOrders.addEventListener('click', function () {
+          setBodyState('orders');
+        });
+
+        btnOrderPizza.addEventListener('click', function () {
+          startShiftWithOrder('pizza');
+        });
+        btnOrderVase.addEventListener('click', function () {
+          startShiftWithOrder('vase');
+        });
+        btnOrderAquarium.addEventListener('click', function () {
+          startShiftWithOrder('aquarium');
+        });
+
+        btnBuyGyro.addEventListener('click', function () {
+          purchaseUpgrade('gyro');
+        });
+        btnBuyTitanium.addEventListener('click', function () {
+          purchaseUpgrade('titanium');
+        });
+        btnBuyMagnet.addEventListener('click', function () {
+          purchaseUpgrade('magnet');
+        });
+
+        btnPlayAgain.addEventListener('click', function () {
+          sound.init();
+          setBodyState('orders');
+        });
+        btnResultToGarage.addEventListener('click', function () {
+          sound.init();
+          setBodyState('garage');
+        });
+        btnResumeShift.addEventListener('click', function () {
+          sound.init();
+          setBodyState('playing');
+        });
+        btnRestartFromPause.addEventListener('click', function () {
+          startShiftWithOrder(state.selectedOrder);
+        });
+        btnExitToTitle.addEventListener('click', function () {
+          resetGame(state.selectedOrder);
+          setBodyState('title');
+        });
+
+        function togglePause() {
+          if (state.mode === 'playing') {
+            setBodyState('paused');
+          } else if (state.mode === 'paused') {
+            setBodyState('playing');
+          }
+        }
+
+        function handleMuteToggle() {
+          const isMuted = sound.toggleMute();
+          profile.muted = isMuted;
+          saveProfile();
+        }
+
+        btnPause.addEventListener('click', function (e) {
+          e.currentTarget.blur();
+          togglePause();
+        });
+
+        btnMute.addEventListener('click', function (e) {
+          e.currentTarget.blur();
+          handleMuteToggle();
+        });
+
+        btnSwipeLeft.addEventListener('click', function (e) {
+          e.currentTarget.blur();
+          triggerHorizontalSwipe(-1);
+        });
+        btnSwipeRight.addEventListener('click', function (e) {
+          e.currentTarget.blur();
+          triggerHorizontalSwipe(1);
+        });
+        btnBoost.addEventListener('click', function (e) {
+          e.currentTarget.blur();
+          triggerVerticalSwipe(1);
+        });
+        btnBrake.addEventListener('click', function (e) {
+          e.currentTarget.blur();
+          triggerVerticalSwipe(-1);
+        });
+
+        // ============================================================================
+        // 7. ROAD GEOMETRY & PERSPECTIVE HELPERS
+        // ============================================================================
+        function getPlayerY() {
+          return ch * 0.78;
+        }
+
+        function getTiltGaugeY() {
+          if (hudTopEl && viewportEl) {
+            const hudRect = hudTopEl.getBoundingClientRect();
+            const vpRect = viewportEl.getBoundingClientRect();
+            const bottomRel = hudRect.bottom - vpRect.top;
+            if (bottomRel > 60) {
+              return Math.round(bottomRel + 26);
+            }
+          }
+          return 128;
+        }
+
+        function getRoadHorizonY() {
+          return Math.max(getTiltGaugeY() + 30, ch * 0.19);
+        }
+
+        function getRoadBoundsAtY(y) {
+          const horizonY = getRoadHorizonY();
+          const t = Math.max(0, Math.min(1.15, (y - horizonY) / (ch - horizonY)));
+          const topWidth = cw * 0.46;
+          const bottomWidth = cw * 0.88;
+          const roadWidth = topWidth + (bottomWidth - topWidth) * t;
+          const left = (cw - roadWidth) * 0.5;
+          return {
+            left,
+            right: left + roadWidth,
+            width: roadWidth,
+            scale: 0.52 + 0.48 * t,
+          };
+        }
+
+        function getLaneX(laneFloat, y) {
+          const bounds = getRoadBoundsAtY(y);
+          const laneWidth = bounds.width / 3;
+          return bounds.left + laneWidth * (laneFloat + 0.5);
+        }
+
+        function lerp(a, b, t) {
+          return a + (b - a) * t;
+        }
+
+        // ============================================================================
+        // 8. OBSTACLE & BONUS SPAWNING
+        // ============================================================================
+        function spawnObstacleWave() {
+          const progress = Math.min(1, state.distance / CONFIG.TARGET_DISTANCE);
+          const horizonY = getRoadHorizonY() - 20;
+
+          const isOpeningGrace = state.elapsedTime < 4.5;
+          const doubleSpawn =
+            !isOpeningGrace && progress > 0.25 && Math.random() < 0.32;
+          const count = doubleSpawn ? 2 : 1;
+          const availableLanes = isOpeningGrace ? [0, 2] : [0, 1, 2];
+
+          for (let i = 0; i < count; i++) {
+            const pickIdx = Math.floor(Math.random() * availableLanes.length);
+            const lane = availableLanes.splice(pickIdx, 1)[0];
+
+            const roll = Math.random();
+            let type = 'car';
+            let speedMul = 0.82;
+            if (roll < 0.38) {
+              type = 'car';
+              speedMul = 0.95 + Math.random() * 0.25;
+            } else if (roll < 0.72) {
+              type = 'barrier';
+              speedMul = 0.72;
+            } else {
+              type = 'drone';
+              speedMul = 0.86;
+            }
+
+            state.obstacles.push({
+              type,
+              lane,
+              visualLane: lane,
+              targetLane: lane,
+              y: horizonY - i * 45,
+              speedMul,
+              phase: Math.random() * Math.PI * 2,
+              switched: false,
+            });
+          }
+        }
+
+        function spawnCoinLine() {
+          const lane = Math.floor(Math.random() * 3);
+          const horizonY = getRoadHorizonY() - 10;
+          const count = 2 + Math.floor(Math.random() * 2);
+          for (let i = 0; i < count; i++) {
+            state.pickups.push({
+              lane,
+              visualLane: lane,
+              y: horizonY - i * 54,
+              radius: 14,
+              spin: i * 0.6,
+              magnetized: false,
+            });
+          }
+        }
+
+        // ============================================================================
+        // 9. DAMAGE, TILT CRASH & END-OF-SHIFT HANDLERS
+        // ============================================================================
+        function triggerTiltCrash() {
+          const dmg = getEffectiveDamage(CONFIG.TILT_DAMAGE);
+          state.hp = Math.max(0, state.hp - dmg);
+          state.tilt = 0;
+          state.tiltVelocity = 0;
+          state.waveTimer = 0;
+          state.wasInDangerZone = false;
+          state.shakeTrauma = 1.0;
+          state.flashAlpha = 0.68;
+          state.flashColor = '#ff3355';
+          state.hitstopTimer = 0.06;
+          sound.explosion();
+          triggerHaptic([45, 30, 70]);
+
+          const px = getLaneX(state.visualLane, getPlayerY());
+          const py = getPlayerY();
+          addFloatingText('ХРУСЬ! -' + dmg + '%', px, py - 96, '#ff3355', 1.3);
+          spawnNeonSparks(
+            px,
+            py - 34,
+            26,
+            ['#ff3355', '#ffb800', '#ffffff'],
+            95,
+            280
+          );
+
+          updateHudDom();
+          if (state.hp <= 0) {
+            finishShift(false, 'Груз полностью разбит из-за потери баланса.');
+          }
+        }
+
+        function triggerObstacleCollision(obs) {
+          const dmg = getEffectiveDamage(CONFIG.OBSTACLE_DAMAGE);
+          state.hp = Math.max(0, state.hp - dmg);
+          state.invulnTimer = 0.85;
+          state.shakeTrauma = 1.0;
+          state.flashAlpha = 0.72;
+          state.flashColor = '#ff2a85';
+          state.hitstopTimer = 0.065;
+
+          state.tilt = Math.max(
+            -85,
+            Math.min(85, state.tilt + (Math.random() < 0.5 ? -28 : 28))
+          );
+          if (ORDERS[state.selectedOrder].hasWaveSlosh) {
+            state.waveTimer = 3.0;
+          }
+          sound.explosion();
+          triggerHaptic([45, 30, 70]);
+
+          const px = getLaneX(state.visualLane, getPlayerY());
+          const py = getPlayerY();
+          addFloatingText('ХРУСЬ! -' + dmg + '%', px, py - 96, '#ff2a85', 1.3);
+          spawnNeonSparks(
+            px,
+            py - 22,
+            30,
+            ['#ff2a85', '#00f0ff', '#ffb800', '#ffffff'],
+            110,
+            310
+          );
+
+          updateHudDom();
+          if (state.hp <= 0) {
+            finishShift(false, 'Посылка уничтожена при столкновении на трассе.');
+          }
+        }
+
+        function finishShift(victory, subtitleReason) {
+          if (state.mode === 'gameover') return;
+
+          const order = ORDERS[state.selectedOrder] || ORDERS.pizza;
+          const hp = Math.round(state.hp);
+          const dist = Math.min(CONFIG.TARGET_DISTANCE, Math.round(state.distance));
+          const timeLeft = Math.max(0, state.timeLeft);
+          const coins = state.coins;
+
+          const basePay = victory ? order.basePay : 0;
+          const conditionTip = victory
+            ? Math.round((hp / 100) * (order.basePay * 0.6))
+            : 0;
+          const speedTip = victory ? Math.round(timeLeft * 8) : 0;
+          const coinBonus = coins * 15;
+          const total = basePay + conditionTip + speedTip + coinBonus;
+
+          // Credit total earnings to persistent wallet in localStorage
+          profile.wallet += total;
+          saveProfile();
+
+          let grade = 'C';
+          if (!victory) {
+            grade = 'F';
+          } else if (hp >= 90 && timeLeft >= 10) {
+            grade = 'S+';
+          } else if (hp >= 75) {
+            grade = 'A';
+          } else if (hp >= 50) {
+            grade = 'B';
+          }
+
+          state.endSnapshot = {
+            victory,
+            dist,
+            hp,
+            grade,
+            basePay,
+            conditionTip,
+            speedTip,
+            coinBonus,
+            total,
+          };
+
+          document.getElementById('resultKicker').textContent = victory
+            ? 'Заказ «' + order.title + '» выполнен'
+            : 'Критический сбой смены';
+          document.getElementById('resultHeading').textContent = victory
+            ? 'Смена выполнена!'
+            : 'Доставка сорвана';
+          document.getElementById('resultSubtitle').textContent = subtitleReason;
+
+          document.getElementById('resDistance').textContent = dist + ' м';
+          document.getElementById('resHp').textContent = hp + '%';
+          document.getElementById('resGrade').textContent = grade;
+          document.getElementById('resGrade').style.color = victory
+            ? '#00ff9d'
+            : '#ff3355';
+
+          document.getElementById('resOrderLabel').textContent =
+            'Тариф (' + order.shortTitle + ')';
+          document.getElementById('resBasePay').textContent = '+' + basePay + ' М';
+          document.getElementById('resConditionTip').textContent =
+            '+' + conditionTip + ' М';
+          document.getElementById('resSpeedTip').textContent = '+' + speedTip + ' М';
+          document.getElementById('resCoinBonus').textContent = '+' + coinBonus + ' М';
+          document.getElementById('resTotalPay').textContent = '+' + total + ' М';
+          btnPlayAgain.textContent = victory
+            ? 'Выбрать следующий заказ'
+            : 'Попробовать снова';
+
+          if (victory) {
+            sound.victory();
+          } else {
+            sound.defeat();
+          }
+
+          setBodyState('gameover');
+        }
+
+        // ============================================================================
+        // 10. HUD DOM SYNCHRONIZATION
+        // ============================================================================
+        let lastHudSecond = -1;
+        let lastHudDist = -1;
+        let lastHudCoins = -1;
+        let lastHudHp = -1;
+
+        function updateSpeedButtonsUI() {
+          btnBoost.classList.toggle('boost-active', state.speedMode === 'boost');
+          btnBrake.classList.toggle('brake-active', state.speedMode === 'brake');
+          if (state.speedMode === 'boost') {
+            hudSpeedMode.textContent = 'ФОРСАЖ';
+            hudSpeedMode.style.color = '#ff2a85';
+          } else if (state.speedMode === 'brake') {
+            hudSpeedMode.textContent = 'ТОРМОЗ';
+            hudSpeedMode.style.color = '#ffb800';
+          } else {
+            hudSpeedMode.textContent = 'НОРМА';
+            hudSpeedMode.style.color = '#f1f5f9';
+          }
+        }
+
+        function updateHudDom(force = false) {
+          const sec = Math.ceil(state.timeLeft);
+          if (force || sec !== lastHudSecond) {
+            lastHudSecond = sec;
+            hudTime.textContent = sec + 'с';
+            hudTime.style.color = sec <= 10 ? '#ff3355' : '#00f0ff';
+          }
+
+          if (force || state.coins !== lastHudCoins) {
+            lastHudCoins = state.coins;
+            hudCoins.textContent = String(state.coins);
+          }
+
+          const hpInt = Math.round(state.hp);
+          if (force || hpInt !== lastHudHp) {
+            lastHudHp = hpInt;
+            hudHpText.textContent = hpInt + '%';
+            hudHpText.style.color =
+              hpInt > 50 ? '#00ff9d' : hpInt > 25 ? '#ffb800' : '#ff3355';
+            const scale = Math.max(0, Math.min(1, hpInt / 100));
+            hudHpFill.style.transform = 'scaleX(' + scale + ')';
+            hudHpGhost.style.transform = 'scaleX(' + scale + ')';
+          }
+
+          const distInt = Math.min(CONFIG.TARGET_DISTANCE, Math.floor(state.distance));
+          if (
+            force ||
+            Math.abs(distInt - lastHudDist) >= 5 ||
+            distInt === CONFIG.TARGET_DISTANCE
+          ) {
+            lastHudDist = distInt;
+            hudDistText.textContent = distInt + ' / ' + CONFIG.TARGET_DISTANCE + ' м';
+            const distScale = Math.max(
+              0,
+              Math.min(1, state.distance / CONFIG.TARGET_DISTANCE)
+            );
+            hudDistFill.style.transform = 'scaleX(' + distScale + ')';
+          }
+
+          if (force) {
+            updateSpeedButtonsUI();
+          }
+        }
+
+        // ============================================================================
+        // 11. SIMULATION UPDATE STEP (60 FPS Clamped dt)
+        // ============================================================================
+        function updateSimulation(rawDt) {
+          const dt = Math.min(rawDt, 0.05);
+          state.elapsedTime += dt;
+
+          if (state.flashAlpha > 0) {
+            state.flashAlpha = Math.max(0, state.flashAlpha - dt * 2.2);
+          }
+          if (state.shakeTrauma > 0) {
+            state.shakeTrauma = Math.max(0, state.shakeTrauma - dt * 2.4);
+          }
+
+          // Smooth speed lines intensity ramp when in Boost
+          const targetBoostVis =
+            state.mode === 'playing' && state.speedMode === 'boost' ? 1 : 0;
+          state.boostVisual = lerp(
+            state.boostVisual,
+            targetBoostVis,
+            Math.min(1, dt * 10)
+          );
+          if (state.boostVisual > 0.01) {
+            for (let i = 0; i < SPEED_LINE_COUNT; i++) {
+              const sl = speedLines[i];
+              sl.yFrac = (sl.yFrac + dt * sl.speed * 2.4) % 1;
+            }
+          }
+
+          // Ambient animation in menu screens
+          if (
+            state.mode === 'title' ||
+            state.mode === 'orders' ||
+            state.mode === 'garage'
+          ) {
+            state.roadScroll = (state.roadScroll + CONFIG.BASE_SPEED * 14 * dt) % 120;
+            state.visualLane = 1 + Math.sin(state.elapsedTime * 1.4) * 0.25;
+            state.tilt = Math.sin(state.elapsedTime * 2.1) * 18;
+            state.wavePhase += dt * 5;
+            spawnMonowheelTrail(dt);
+            updateParticles(dt);
+            return;
+          }
+
+          if (state.mode !== 'playing') {
+            return;
+          }
+
+          if (state.hitstopTimer > 0) {
+            state.hitstopTimer -= dt;
+            return;
+          }
+
+          if (state.invulnTimer > 0) {
+            state.invulnTimer = Math.max(0, state.invulnTimer - dt);
+          }
+
+          // 1. Speed mode timer & velocity lerp
+          if (state.speedTimer > 0) {
+            state.speedTimer -= dt;
+            if (state.speedTimer <= 0) {
+              state.speedMode = 'normal';
+              updateSpeedButtonsUI();
+            }
+          }
+
+          const targetSpeed =
+            state.speedMode === 'boost'
+              ? CONFIG.BOOST_SPEED
+              : state.speedMode === 'brake'
+                ? CONFIG.BRAKE_SPEED
+                : CONFIG.BASE_SPEED;
+          state.currentSpeed = lerp(state.currentSpeed, targetSpeed, Math.min(1, dt * 8));
+
+          // 2. Progress distance & timer
+          state.distance += state.currentSpeed * dt;
+          state.timeLeft = Math.max(0, state.timeLeft - dt);
+          state.roadScroll = (state.roadScroll + state.currentSpeed * 16 * dt) % 120;
+
+          // 3. Smooth lane lerp for courier
+          state.visualLane = lerp(
+            state.visualLane,
+            state.lane,
+            Math.min(1, dt * CONFIG.LANE_LERP_SPEED)
+          );
+
+          // 4. Package Balance (Tilt) Physics + Aquarium 3s Wave Slosh
+          state.timeSinceLastSwipe += dt;
+          const normalizedTilt = state.tilt / CONFIG.TILT_LIMIT;
+          const pendulumPull =
+            Math.sign(state.tilt) *
+            (Math.abs(normalizedTilt) * 28 + Math.pow(Math.abs(normalizedTilt), 2) * 42);
+
+          const boostFactor =
+            state.speedMode === 'boost'
+              ? 1.65
+              : state.speedMode === 'brake'
+                ? 0.65
+                : 1.0;
+
+          const stabilizing =
+            state.timeSinceLastSwipe > 0.35 && Math.abs(state.tilt) < 82;
+          const stabilizePull = stabilizing
+            ? -state.tilt * (state.speedMode === 'brake' ? 2.4 : 1.55)
+            : 0;
+
+          // Aquarium wave slosh: sinusoidal oscillation for 3 seconds after swiping
+          let waveSloshAccel = 0;
+          if (ORDERS[state.selectedOrder].hasWaveSlosh && state.waveTimer > 0) {
+            state.waveTimer = Math.max(0, state.waveTimer - dt);
+            state.wavePhase += dt * 7.5;
+            const waveEnvelope = state.waveTimer / 3.0;
+            waveSloshAccel = Math.sin(state.wavePhase) * 95 * waveEnvelope;
+          } else {
+            state.wavePhase += dt * 2.5;
+          }
+
+          const turbulenceSample =
+            Math.sin(state.elapsedTime * 13.7) * 0.6 +
+            Math.cos(state.elapsedTime * 21.3) * 0.4;
+          const wobbleAccel =
+            turbulenceSample * (state.speedMode === 'boost' ? 38 : 8);
+
+          const totalTiltAccel =
+            pendulumPull * boostFactor +
+            stabilizePull +
+            wobbleAccel +
+            waveSloshAccel;
+          state.tiltVelocity += totalTiltAccel * dt;
+          state.tiltVelocity *= Math.pow(0.18, dt);
+          state.tilt += state.tiltVelocity * dt;
+
+          if (
+            stabilizing &&
+            state.waveTimer <= 0 &&
+            Math.abs(state.tilt) < 1.0 &&
+            Math.abs(state.tiltVelocity) < 4
+          ) {
+            state.tilt = 0;
+            state.tiltVelocity = 0;
+          }
+
+          // Тревожная красная зона баланса (> 75 или < -75): прерывистый писк + «ОПАСНЫЙ КРЕН!»
+          const inDangerZone =
+            Math.abs(state.tilt) > CONFIG.DANGER_TILT &&
+            Math.abs(state.tilt) < CONFIG.TILT_LIMIT;
+          if (inDangerZone) {
+            state.dangerBeepTimer -= dt;
+            if (state.dangerBeepTimer <= 0) {
+              sound.dangerBeep();
+              state.dangerBeepTimer = 0.34;
+            }
+            state.dangerPopupTimer -= dt;
+            if (!state.wasInDangerZone || state.dangerPopupTimer <= 0) {
+              const px = getLaneX(state.visualLane, getPlayerY());
+              addFloatingText(
+                'ОПАСНЫЙ КРЕН!',
+                px,
+                getPlayerY() - 104,
+                '#ff3355',
+                1.15
+              );
+              state.dangerPopupTimer = 1.15;
+            }
+            state.wasInDangerZone = true;
+          } else {
+            state.wasInDangerZone = false;
+            state.dangerBeepTimer = 0;
+            state.dangerPopupTimer = Math.max(0, state.dangerPopupTimer - dt);
+          }
+
+          if (Math.abs(state.tilt) >= CONFIG.TILT_LIMIT) {
+            triggerTiltCrash();
+            if (state.mode !== 'playing') return;
+          }
+
+          // 5. Spawn & Update Obstacles
+          state.spawnTimer -= dt * (state.currentSpeed / CONFIG.BASE_SPEED);
+          if (state.spawnTimer <= 0) {
+            spawnObstacleWave();
+            const progress = Math.min(1, state.distance / CONFIG.TARGET_DISTANCE);
+            state.spawnTimer = Math.max(0.68, 1.32 - progress * 0.45);
+          }
+
+          state.coinSpawnTimer -= dt;
+          if (state.coinSpawnTimer <= 0) {
+            spawnCoinLine();
+            state.coinSpawnTimer = 1.65 + Math.random() * 0.8;
+          }
+
+          const playerY = getPlayerY();
+          const pixelSpeed = state.currentSpeed * 13.5;
+
+          for (let i = state.obstacles.length - 1; i >= 0; i--) {
+            const obs = state.obstacles[i];
+            obs.y += pixelSpeed * obs.speedMul * dt;
+
+            if (
+              obs.type === 'drone' &&
+              !obs.switched &&
+              obs.y > ch * 0.28 &&
+              obs.y < ch * 0.48
+            ) {
+              obs.switched = true;
+              if (obs.lane === 1) {
+                obs.targetLane = Math.random() < 0.5 ? 0 : 2;
+              } else {
+                obs.targetLane = 1;
+              }
+            }
+            obs.visualLane = lerp(obs.visualLane, obs.targetLane, Math.min(1, dt * 6));
+
+            const dy = Math.abs(obs.y - playerY);
+            const dlane = Math.abs(obs.visualLane - state.visualLane);
+            if (dy < 34 && dlane < 0.42 && state.invulnTimer <= 0) {
+              state.obstacles.splice(i, 1);
+              triggerObstacleCollision(obs);
+              if (state.mode !== 'playing') return;
+              continue;
+            }
+
+            if (obs.y > ch + 90) {
+              state.obstacles.splice(i, 1);
+            }
+          }
+
+          // 6. Update Coins + Tip Magnet Upgrade Logic
+          const magnetLvl = profile.upgrades.magnet || 0;
+          const magnetLaneRange = UPGRADE_CONFIG.magnetLaneRange[magnetLvl] || 0;
+          const magnetPullSpeed = UPGRADE_CONFIG.magnetPullSpeed[magnetLvl] || 0;
+
+          for (let i = state.pickups.length - 1; i >= 0; i--) {
+            const coin = state.pickups[i];
+            coin.y += pixelSpeed * 0.85 * dt;
+            coin.spin += dt * 6;
+            if (typeof coin.visualLane !== 'number') {
+              coin.visualLane = coin.lane;
+            }
+
+            const dyToPlayer = playerY - coin.y;
+            const dlaneToPlayer = Math.abs(coin.visualLane - state.visualLane);
+
+            // Magnet pulls coins from neighboring lanes when approaching the courier
+            if (
+              magnetLvl > 0 &&
+              dyToPlayer > -30 &&
+              dyToPlayer < 190 + magnetLvl * 35 &&
+              dlaneToPlayer <= magnetLaneRange
+            ) {
+              coin.magnetized = true;
+              coin.visualLane = lerp(
+                coin.visualLane,
+                state.visualLane,
+                Math.min(1, dt * magnetPullSpeed)
+              );
+            } else {
+              coin.magnetized = false;
+            }
+
+            const dy = Math.abs(coin.y - (playerY - 12));
+            const dlane = Math.abs(coin.visualLane - state.visualLane);
+            if (dy < 38 && dlane < 0.48) {
+              state.coins += 1;
+              sound.coin();
+              triggerHaptic(10);
+              const cx = getLaneX(coin.visualLane, coin.y);
+              addFloatingText('+10$', cx, coin.y - 22, '#ffb800', 1.2);
+              spawnNeonSparks(
+                cx,
+                coin.y,
+                14,
+                ['#ffb800', '#00ff9d', '#ffffff'],
+                75,
+                210
+              );
+              state.pickups.splice(i, 1);
+              continue;
+            }
+
+            if (coin.y > ch + 60) {
+              state.pickups.splice(i, 1);
+            }
+          }
+
+          spawnMonowheelTrail(dt);
+          updateParticles(dt);
+          updateHudDom();
+
+          if (state.distance >= CONFIG.TARGET_DISTANCE) {
+            finishShift(
+              true,
+              'Заказ доставлен точно по адресу! Выплата зачислена на баланс.'
+            );
+          } else if (state.timeLeft <= 0) {
+            finishShift(
+              false,
+              'Время смены истекло (60 секунд). Заказ был отменен клиентом.'
+            );
+          }
+        }
+
+        function spawnMonowheelTrail(dt) {
+          const py = getPlayerY() + 22;
+          const px = getLaneX(state.visualLane, py);
+          const isBoost = state.speedMode === 'boost';
+          const count = isBoost ? 3 : 2;
+          for (let i = 0; i < count; i++) {
+            const color = isBoost
+              ? i % 2 === 0
+                ? '#ff2a85'
+                : '#00f0ff'
+              : state.speedMode === 'brake'
+                ? '#ffb800'
+                : '#00f0ff';
+            spawnParticle(
+              px + (Math.random() - 0.5) * 14,
+              py + Math.random() * 6,
+              (Math.random() - 0.5) * 28,
+              95 + Math.random() * 90 + (isBoost ? 75 : 0),
+              isBoost ? 3.8 : 2.8,
+              color,
+              2.3,
+              false,
+              0
+            );
+          }
+        }
+
+        function updateParticles(dt) {
+          for (let i = 0; i < MAX_PARTICLES; i++) {
+            const p = particles[i];
+            if (!p.active) continue;
+            if (p.gravity) {
+              p.vy += p.gravity * dt;
+            }
+            if (p.isSpark) {
+              p.vx *= Math.pow(0.25, dt);
+            }
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.alpha -= p.decay * dt;
+            if (p.alpha <= 0) {
+              p.active = false;
+            }
+          }
+
+          for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            const ft = floatingTexts[i];
+            ft.age += dt;
+            ft.y += ft.vy * dt;
+            ft.vy *= Math.pow(0.45, dt);
+            ft.alpha =
+              ft.age < 0.35 ? 1 : Math.max(0, 1 - (ft.age - 0.35) * 1.45);
+            if (ft.alpha <= 0) {
+              floatingTexts.splice(i, 1);
+            }
+          }
+        }
+
+        // ============================================================================
+        // 12. PROCEDURAL NEON CYBERPUNK RENDERER (Canvas 2D)
+        // ============================================================================
+        function renderScene() {
+          ctx.save();
+
+          if (state.shakeTrauma > 0) {
+            const shakeMag = state.shakeTrauma * state.shakeTrauma * 16;
+            const ox = (Math.random() * 2 - 1) * shakeMag;
+            const oy = (Math.random() * 2 - 1) * shakeMag;
+            ctx.translate(ox, oy);
+          }
+
+          const horizonY = getRoadHorizonY();
+          const skyGrad = ctx.createLinearGradient(0, 0, 0, ch);
+          skyGrad.addColorStop(0, '#04050c');
+          skyGrad.addColorStop(0.2, '#0d0822');
+          skyGrad.addColorStop(1, '#050711');
+          ctx.fillStyle = skyGrad;
+          ctx.fillRect(0, 0, cw, ch);
+
+          drawCyberSkyline(horizonY);
+          drawSideNeonGrids(horizonY);
+          drawHighway(horizonY);
+
+          for (let i = 0; i < state.pickups.length; i++) {
+            drawCoin(state.pickups[i]);
+          }
+
+          for (let i = 0; i < state.obstacles.length; i++) {
+            drawObstacle(state.obstacles[i]);
+          }
+
+          drawParticles();
+          drawCourier();
+          drawSpeedLines();
+          drawFloatingTexts();
+
+          if (
+            state.mode === 'playing' ||
+            state.mode === 'paused' ||
+            state.mode === 'gameover'
+          ) {
+            drawTiltGauge();
+          }
+
+          // Danger red edge pulse when balance is in critical red zone (>75 or <-75)
+          if (state.mode === 'playing' && Math.abs(state.tilt) > CONFIG.DANGER_TILT) {
+            const pulse = 0.14 + Math.abs(Math.sin(state.elapsedTime * 12)) * 0.18;
+            ctx.save();
+            ctx.strokeStyle = `rgba(255, 51, 85, ${pulse})`;
+            ctx.lineWidth = 10;
+            ctx.strokeRect(0, 0, cw, ch);
+            ctx.restore();
+          }
+
+          if (state.flashAlpha > 0) {
+            ctx.fillStyle = state.flashColor;
+            ctx.globalAlpha = state.flashAlpha;
+            ctx.fillRect(0, 0, cw, ch);
+            ctx.globalAlpha = 1;
+          }
+
+          ctx.restore();
+        }
+
+        function drawCyberSkyline(horizonY) {
+          ctx.save();
+          const sunGrad = ctx.createRadialGradient(
+            cw * 0.5,
+            horizonY,
+            6,
+            cw * 0.5,
+            horizonY,
+            cw * 0.48
+          );
+          sunGrad.addColorStop(0, 'rgba(255, 42, 133, 0.42)');
+          sunGrad.addColorStop(0.5, 'rgba(0, 240, 255, 0.16)');
+          sunGrad.addColorStop(1, 'rgba(5, 6, 13, 0)');
+          ctx.fillStyle = sunGrad;
+          ctx.fillRect(0, 0, cw, horizonY + 40);
+
+          ctx.fillStyle = '#070a18';
+          ctx.strokeStyle = 'rgba(0, 240, 255, 0.28)';
+          ctx.lineWidth = 1;
+          const towers = [
+            { x: 0.04, w: 0.1, h: 48 },
+            { x: 0.15, w: 0.09, h: 68 },
+            { x: 0.25, w: 0.12, h: 42 },
+            { x: 0.63, w: 0.11, h: 54 },
+            { x: 0.76, w: 0.1, h: 72 },
+            { x: 0.87, w: 0.1, h: 44 },
+          ];
+          for (let i = 0; i < towers.length; i++) {
+            const t = towers[i];
+            const tx = cw * t.x;
+            const tw = cw * t.w;
+            const ty = horizonY - t.h;
+            ctx.fillRect(tx, ty, tw, t.h);
+            ctx.strokeRect(tx, ty, tw, t.h);
+          }
+          ctx.restore();
+        }
+
+        function drawSideNeonGrids(horizonY) {
+          ctx.save();
+          const topBounds = getRoadBoundsAtY(horizonY);
+          const botBounds = getRoadBoundsAtY(ch);
+
+          ctx.strokeStyle = 'rgba(255, 42, 133, 0.25)';
+          ctx.lineWidth = 1;
+
+          for (let i = 1; i <= 4; i++) {
+            const frac = i / 4;
+            ctx.beginPath();
+            ctx.moveTo(topBounds.left * (1 - frac), horizonY);
+            ctx.lineTo(botBounds.left * (1 - frac * 1.3), ch);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(
+              topBounds.right + (cw - topBounds.right) * frac,
+              horizonY
+            );
+            ctx.lineTo(
+              botBounds.right + (cw - botBounds.right) * (frac * 1.3),
+              ch
+            );
+            ctx.stroke();
+          }
+
+          const scrollNorm = (state.roadScroll % 40) / 40;
+          for (let row = 0; row < 10; row++) {
+            const p = (row + scrollNorm) / 10;
+            const y = horizonY + Math.pow(p, 1.55) * (ch - horizonY);
+            const b = getRoadBoundsAtY(y);
+            ctx.strokeStyle = `rgba(255, 42, 133, ${0.08 + p * 0.28})`;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(b.left, y);
+            ctx.moveTo(b.right, y);
+            ctx.lineTo(cw, y);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function drawHighway(horizonY) {
+          ctx.save();
+          const topB = getRoadBoundsAtY(horizonY);
+          const botB = getRoadBoundsAtY(ch);
+
+          const roadGrad = ctx.createLinearGradient(0, horizonY, 0, ch);
+          roadGrad.addColorStop(0, '#090d1e');
+          roadGrad.addColorStop(0.5, '#0c1228');
+          roadGrad.addColorStop(1, '#070b18');
+
+          ctx.beginPath();
+          ctx.moveTo(topB.left, horizonY);
+          ctx.lineTo(topB.right, horizonY);
+          ctx.lineTo(botB.right, ch);
+          ctx.lineTo(botB.left, ch);
+          ctx.closePath();
+          ctx.fillStyle = roadGrad;
+          ctx.fill();
+
+          ctx.shadowColor = '#00f0ff';
+          ctx.shadowBlur = 14;
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 3;
+
+          ctx.beginPath();
+          ctx.moveTo(topB.left, horizonY);
+          ctx.lineTo(botB.left, ch);
+          ctx.moveTo(topB.right, horizonY);
+          ctx.lineTo(botB.right, ch);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          const activeLane = state.lane;
+          const topLaneL = topB.left + (topB.width / 3) * activeLane;
+          const topLaneR = topLaneL + topB.width / 3;
+          const botLaneL = botB.left + (botB.width / 3) * activeLane;
+          const botLaneR = botLaneL + botB.width / 3;
+
+          ctx.fillStyle =
+            state.speedMode === 'boost'
+              ? 'rgba(255, 42, 133, 0.06)'
+              : 'rgba(0, 240, 255, 0.045)';
+          ctx.beginPath();
+          ctx.moveTo(topLaneL, horizonY);
+          ctx.lineTo(topLaneR, horizonY);
+          ctx.lineTo(botLaneR, ch);
+          ctx.lineTo(botLaneL, ch);
+          ctx.closePath();
+          ctx.fill();
+
+          const dashOffset = (state.roadScroll % 60) / 60;
+          ctx.strokeStyle = '#00f0ff';
+          ctx.shadowColor = '#00f0ff';
+          ctx.shadowBlur = 8;
+
+          for (let div = 1; div <= 2; div++) {
+            const frac = div / 3;
+            for (let seg = 0; seg < 9; seg++) {
+              const t0 = (seg + dashOffset) / 9;
+              const t1 = Math.min(1, t0 + 0.055);
+              if (t0 >= 1) continue;
+
+              const y0 = horizonY + Math.pow(t0, 1.45) * (ch - horizonY);
+              const y1 = horizonY + Math.pow(t1, 1.45) * (ch - horizonY);
+              const b0 = getRoadBoundsAtY(y0);
+              const b1 = getRoadBoundsAtY(y1);
+
+              const x0 = b0.left + b0.width * frac;
+              const x1 = b1.left + b1.width * frac;
+
+              ctx.lineWidth = 1.2 + t0 * 2.2;
+              ctx.globalAlpha = 0.25 + t0 * 0.65;
+              ctx.beginPath();
+              ctx.moveTo(x0, y0);
+              ctx.lineTo(x1, y1);
+              ctx.stroke();
+            }
+          }
+
+          ctx.globalAlpha = 1;
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+
+        function drawCoin(coin) {
+          const b = getRoadBoundsAtY(coin.y);
+          const laneVal =
+            typeof coin.visualLane === 'number' ? coin.visualLane : coin.lane;
+          const x = getLaneX(laneVal, coin.y);
+          const r = coin.radius * b.scale;
+          const squeeze = Math.max(0.35, Math.abs(Math.cos(coin.spin)));
+
+          ctx.save();
+
+          // Draw magnetic tether beam when Tip Magnet pulls a coin
+          if (coin.magnetized) {
+            const py = getPlayerY() - 18;
+            const px = getLaneX(state.visualLane, py);
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(x, coin.y);
+            ctx.lineTo(px, py);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+
+          ctx.translate(x, coin.y);
+          ctx.shadowColor = '#ffb800';
+          ctx.shadowBlur = 12;
+
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r * squeeze, r, 0, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffb800';
+          ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = '#fff3b0';
+          ctx.stroke();
+
+          ctx.restore();
+        }
+
+        function drawObstacle(obs) {
+          const b = getRoadBoundsAtY(obs.y);
+          const x = getLaneX(obs.visualLane, obs.y);
+          const s = b.scale;
+
+          ctx.save();
+          ctx.translate(x, obs.y);
+
+          if (obs.type === 'car') {
+            const w = 52 * s;
+            const h = 74 * s;
+            ctx.shadowColor = '#ff2a85';
+            ctx.shadowBlur = 14;
+
+            ctx.fillStyle = '#161233';
+            ctx.strokeStyle = '#ff2a85';
+            ctx.lineWidth = 2.2 * s;
+            ctx.beginPath();
+            ctx.roundRect(-w * 0.5, -h * 0.5, w, h, 10 * s);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
+            ctx.beginPath();
+            ctx.roundRect(-w * 0.36, -h * 0.18, w * 0.72, h * 0.34, 5 * s);
+            ctx.fill();
+
+            ctx.fillStyle = '#ff3355';
+            ctx.fillRect(-w * 0.38, h * 0.38, w * 0.24, 5 * s);
+            ctx.fillRect(w * 0.14, h * 0.38, w * 0.24, 5 * s);
+          } else if (obs.type === 'barrier') {
+            const w = 68 * s;
+            const h = 30 * s;
+            ctx.shadowColor = '#ff3355';
+            ctx.shadowBlur = 16;
+
+            ctx.fillStyle = 'rgba(255, 51, 85, 0.22)';
+            ctx.strokeStyle = '#ff3355';
+            ctx.lineWidth = 2.5 * s;
+            ctx.beginPath();
+            ctx.roundRect(-w * 0.5, -h * 0.5, w, h, 6 * s);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffb800';
+            ctx.fillRect(-w * 0.38, -3 * s, w * 0.76, 6 * s);
+          } else {
+            const r = 25 * s;
+            const bob = Math.sin(state.elapsedTime * 8 + obs.phase) * 4 * s;
+            ctx.translate(0, bob);
+
+            if (Math.abs(obs.targetLane - obs.visualLane) > 0.08) {
+              const targetX = getLaneX(obs.targetLane, obs.y) - x;
+              ctx.strokeStyle = 'rgba(255, 184, 0, 0.65)';
+              ctx.setLineDash([4, 4]);
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(targetX, 0);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
+
+            ctx.shadowColor = '#00ff9d';
+            ctx.shadowBlur = 14;
+            ctx.fillStyle = '#0b1e2d';
+            ctx.strokeStyle = '#00ff9d';
+            ctx.lineWidth = 2.2 * s;
+
+            ctx.beginPath();
+            for (let k = 0; k < 6; k++) {
+              const ang = (k / 6) * Math.PI * 2;
+              const px = Math.cos(ang) * r;
+              const py = Math.sin(ang) * r * 0.75;
+              if (k === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#ff3355';
+            ctx.beginPath();
+            ctx.arc(0, 0, 6 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          ctx.restore();
+        }
+
+        function drawParticles() {
+          ctx.save();
+          for (let i = 0; i < MAX_PARTICLES; i++) {
+            const p = particles[i];
+            if (!p.active) continue;
+            ctx.globalAlpha = Math.max(0, p.alpha);
+            ctx.shadowColor = p.color;
+
+            if (p.isSpark) {
+              // Oriented neon spark streak
+              const tailX = p.x - p.vx * 0.036;
+              const tailY = p.y - p.vy * 0.036;
+              ctx.shadowBlur = 12;
+              ctx.strokeStyle = p.color;
+              ctx.lineWidth = p.size;
+              ctx.lineCap = 'round';
+              ctx.beginPath();
+              ctx.moveTo(tailX, tailY);
+              ctx.lineTo(p.x, p.y);
+              ctx.stroke();
+
+              ctx.fillStyle = '#ffffff';
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, p.size * 0.55, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              ctx.shadowBlur = 8;
+              ctx.fillStyle = p.color;
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          ctx.restore();
+        }
+
+        function drawSpeedLines() {
+          if (state.boostVisual <= 0.01) return;
+
+          ctx.save();
+          const vis = state.boostVisual;
+
+          // Edge glow bands on left and right sides during Boost
+          const leftGrad = ctx.createLinearGradient(0, 0, cw * 0.16, 0);
+          leftGrad.addColorStop(0, `rgba(255, 42, 133, ${0.22 * vis})`);
+          leftGrad.addColorStop(1, 'rgba(255, 42, 133, 0)');
+          ctx.fillStyle = leftGrad;
+          ctx.fillRect(0, 0, cw * 0.16, ch);
+
+          const rightGrad = ctx.createLinearGradient(cw, 0, cw * 0.84, 0);
+          rightGrad.addColorStop(0, `rgba(0, 240, 255, ${0.22 * vis})`);
+          rightGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+          ctx.fillStyle = rightGrad;
+          ctx.fillRect(cw * 0.84, 0, cw * 0.16, ch);
+
+          // High-speed neon streaks rushing along left & right edges
+          ctx.lineCap = 'round';
+          for (let i = 0; i < SPEED_LINE_COUNT; i++) {
+            const sl = speedLines[i];
+            const x =
+              sl.side === -1 ? sl.edgeOffset : cw - sl.edgeOffset;
+            const y = sl.yFrac * (ch + sl.length) - sl.length;
+
+            ctx.globalAlpha = vis * (0.45 + (i % 3) * 0.2);
+            ctx.shadowColor = sl.color;
+            ctx.shadowBlur = 10;
+            ctx.strokeStyle = sl.color;
+            ctx.lineWidth = i % 2 === 0 ? 2.5 : 1.6;
+
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + sl.side * -3, y + sl.length);
+            ctx.stroke();
+          }
+
+          ctx.restore();
+        }
+
+        function drawCourier() {
+          const py = getPlayerY();
+          const px = getLaneX(state.visualLane, py);
+          const laneVel = state.lane - state.visualLane;
+          const bodyLean = laneVel * 0.24;
+
+          ctx.save();
+          ctx.translate(px, py);
+
+          if (
+            state.invulnTimer > 0 &&
+            Math.floor(state.invulnTimer * 18) % 2 === 0
+          ) {
+            ctx.globalAlpha = 0.45;
+          }
+
+          // 1. Ground Neon Halo under Monowheel
+          const wheelColor =
+            state.speedMode === 'boost'
+              ? '#ff2a85'
+              : state.speedMode === 'brake'
+                ? '#ffb800'
+                : '#00f0ff';
+          const haloGrad = ctx.createRadialGradient(0, 22, 2, 0, 22, 36);
+          haloGrad.addColorStop(
+            0,
+            state.speedMode === 'boost'
+              ? 'rgba(255, 42, 133, 0.55)'
+              : 'rgba(0, 240, 255, 0.45)'
+          );
+          haloGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+          ctx.fillStyle = haloGrad;
+          ctx.beginPath();
+          ctx.ellipse(0, 22, 34, 12, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.rotate(bodyLean);
+
+          // 2. Glowing Monowheel
+          ctx.shadowColor = wheelColor;
+          ctx.shadowBlur = 16;
+          ctx.fillStyle = '#090d1a';
+          ctx.strokeStyle = wheelColor;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.roundRect(-8, -2, 16, 30, 8);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, 3);
+          ctx.lineTo(0, 23);
+          ctx.stroke();
+
+          // 3. Courier Torso & Helmet
+          ctx.shadowColor = '#00f0ff';
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = '#131b36';
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(-17, -34, 34, 34, 9);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.strokeStyle = '#ff2a85';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(-10, -26);
+          ctx.lineTo(0, -14);
+          ctx.lineTo(10, -26);
+          ctx.stroke();
+
+          ctx.fillStyle = '#0b1021';
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, -44, 12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // 4. SELECTED ORDER CARGO SHAPE ABOVE COURIER
+          const tiltRad = (state.tilt / CONFIG.TILT_LIMIT) * 0.72;
+          const tiltOffsetX = (state.tilt / CONFIG.TILT_LIMIT) * 18;
+          const absTilt = Math.abs(state.tilt);
+          const statusColor =
+            absTilt < 45 ? '#00ff9d' : absTilt < 75 ? '#ffb800' : '#ff3355';
+
+          ctx.save();
+          ctx.translate(tiltOffsetX, -58);
+          ctx.rotate(tiltRad);
+
+          ctx.shadowColor = statusColor;
+          ctx.shadowBlur = absTilt >= 70 ? 22 : 13;
+
+          if (state.selectedOrder === 'pizza') {
+            // Flat Wide Thermal Pizza Box + Neon Slice Icon
+            const bw = 50;
+            const bh = 18;
+            ctx.fillStyle = '#261219';
+            ctx.strokeStyle = statusColor;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.roundRect(-bw * 0.5, -bh, bw, bh, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            // Thermal stripe & pizza emblem
+            ctx.strokeStyle = '#ffb800';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-bw * 0.36, -bh * 0.5);
+            ctx.lineTo(bw * 0.36, -bh * 0.5);
+            ctx.stroke();
+
+            ctx.fillStyle = '#ff3355';
+            ctx.beginPath();
+            ctx.arc(0, -bh * 0.5, 4, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (state.selectedOrder === 'vase') {
+            // Tall Faceted Crystal Vase
+            ctx.fillStyle = 'rgba(16, 32, 62, 0.92)';
+            ctx.strokeStyle = statusColor;
+            ctx.lineWidth = 2.5;
+
+            ctx.beginPath();
+            ctx.moveTo(-10, -44);
+            ctx.lineTo(10, -44);
+            ctx.lineTo(6, -30);
+            ctx.lineTo(17, -14);
+            ctx.lineTo(11, 0);
+            ctx.lineTo(-11, 0);
+            ctx.lineTo(-17, -14);
+            ctx.lineTo(-6, -30);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Crystal facet highlights
+            ctx.strokeStyle = '#ff2a85';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(-6, -30);
+            ctx.lineTo(6, -30);
+            ctx.moveTo(-15, -14);
+            ctx.lineTo(15, -14);
+            ctx.moveTo(0, -44);
+            ctx.lineTo(0, 0);
+            ctx.stroke();
+          } else {
+            // Piranha Aquarium with Sloshing Water Wave & Swimming Piranhas
+            const bw = 48;
+            const bh = 34;
+            ctx.fillStyle = 'rgba(8, 26, 44, 0.9)';
+            ctx.strokeStyle = statusColor;
+            ctx.lineWidth = 2.6;
+            ctx.beginPath();
+            ctx.roundRect(-bw * 0.5, -bh, bw, bh, 6);
+            ctx.fill();
+
+            // Animated sloshing water surface inside tank
+            const sloshAmp =
+              state.waveTimer > 0 ? Math.sin(state.wavePhase) * 6 : 2;
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.34)';
+            ctx.beginPath();
+            ctx.moveTo(-bw * 0.46, -bh * 0.55 - sloshAmp);
+            ctx.quadraticCurveTo(
+              0,
+              -bh * 0.55 + sloshAmp * 1.4,
+              bw * 0.46,
+              -bh * 0.55 - sloshAmp
+            );
+            ctx.lineTo(bw * 0.46, -2);
+            ctx.lineTo(-bw * 0.46, -2);
+            ctx.closePath();
+            ctx.fill();
+
+            // Swimming Neon Piranha Silhouette
+            const fishX = Math.sin(state.elapsedTime * 5) * 9;
+            const fishY = -bh * 0.32 + Math.cos(state.elapsedTime * 7) * 3;
+            ctx.fillStyle = '#ffb800';
+            ctx.beginPath();
+            ctx.arc(fishX, fishY, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ff3355';
+            ctx.beginPath();
+            ctx.moveTo(fishX + 4, fishY);
+            ctx.lineTo(fishX + 9, fishY - 4);
+            ctx.lineTo(fishX + 9, fishY + 4);
+            ctx.closePath();
+            ctx.fill();
+
+            // Outer tank frame
+            ctx.strokeRect(-bw * 0.5, -bh, bw, bh);
+          }
+
+          // Titanium Packaging reinforcement corner brackets if upgraded
+          if (profile.upgrades.titanium > 0) {
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-26, -4);
+            ctx.lineTo(26, -4);
+            ctx.stroke();
+          }
+
+          ctx.restore();
+          ctx.restore();
+        }
+
+        function drawTiltGauge() {
+          const cx = cw * 0.5;
+          const gy = getTiltGaugeY();
+          const barW = Math.min(cw - 36, 300);
+          const halfW = barW * 0.5;
+
+          ctx.save();
+
+          ctx.fillStyle = 'rgba(7, 10, 24, 0.88)';
+          ctx.strokeStyle =
+            state.waveTimer > 0
+              ? 'rgba(255, 42, 133, 0.65)'
+              : 'rgba(0, 240, 255, 0.28)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.roundRect(cx - halfW - 10, gy - 20, barW + 20, 44, 12);
+          ctx.fill();
+          ctx.stroke();
+
+          const trackGrad = ctx.createLinearGradient(cx - halfW, gy, cx + halfW, gy);
+          trackGrad.addColorStop(0.0, '#ff3355');
+          trackGrad.addColorStop(0.22, '#ffb800');
+          trackGrad.addColorStop(0.4, '#00ff9d');
+          trackGrad.addColorStop(0.5, '#00ff9d');
+          trackGrad.addColorStop(0.6, '#00ff9d');
+          trackGrad.addColorStop(0.78, '#ffb800');
+          trackGrad.addColorStop(1.0, '#ff3355');
+
+          ctx.fillStyle = trackGrad;
+          ctx.beginPath();
+          ctx.roundRect(cx - halfW, gy - 4, barW, 8, 4);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(cx, gy - 9);
+          ctx.lineTo(cx, gy + 9);
+          ctx.stroke();
+
+          const norm = Math.max(-1, Math.min(1, state.tilt / CONFIG.TILT_LIMIT));
+          const markerX = cx + norm * halfW;
+          const absTilt = Math.abs(state.tilt);
+          const markerColor =
+            absTilt < 45 ? '#00ff9d' : absTilt < 75 ? '#ffb800' : '#ff3355';
+
+          ctx.shadowColor = markerColor;
+          ctx.shadowBlur = 14;
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = markerColor;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(markerX, gy, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          ctx.font = '700 11px "JetBrains Mono", monospace';
+          ctx.textAlign = 'center';
+          const sign = state.tilt > 0.5 ? '+' : '';
+          const waveBadge =
+            state.waveTimer > 0
+              ? ' · ВОЛНА ' + state.waveTimer.toFixed(1) + 'с'
+              : '';
+          ctx.fillStyle = markerColor;
+          ctx.fillText(
+            'БАЛАНС: ' + sign + Math.round(state.tilt) + waveBadge,
+            cx,
+            gy + 18
+          );
+
+          ctx.restore();
+        }
+
+        function drawFloatingTexts() {
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          for (let i = 0; i < floatingTexts.length; i++) {
+            const ft = floatingTexts[i];
+            const pop =
+              ft.age < 0.12
+                ? 0.7 + (ft.age / 0.12) * 0.45
+                : Math.max(1.0, 1.15 - (ft.age - 0.12) * 0.4);
+            const finalScale = (ft.scale || 1.0) * pop;
+
+            ctx.save();
+            ctx.translate(ft.x, ft.y);
+            ctx.scale(finalScale, finalScale);
+            ctx.globalAlpha = Math.max(0, ft.alpha);
+            ctx.font = '800 14px "Outfit", sans-serif';
+
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'rgba(4, 6, 15, 0.92)';
+            ctx.strokeText(ft.text, 0, 0);
+
+            ctx.shadowColor = ft.color;
+            ctx.shadowBlur = 12;
+            ctx.fillStyle = ft.color;
+            ctx.fillText(ft.text, 0, 0);
+            ctx.restore();
+          }
+          ctx.restore();
+        }
+
+        // ============================================================================
+        // 13. MAIN LOOP, AUTO-PAUSE ON VISIBILITY/BLUR & INITIALIZATION
+        // ============================================================================
+        loadProfile();
+        syncGarageAndWalletUI();
+        attachTouchPulseFeedback();
+
+        function autoPauseOnBackground() {
+          pointerStartX = null;
+          pointerStartY = null;
+          if (state.mode === 'playing') {
+            setBodyState('paused');
+          }
+        }
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden || document.visibilityState === 'hidden') {
+            autoPauseOnBackground();
+          }
+        });
+
+        window.addEventListener('blur', function () {
+          autoPauseOnBackground();
+        });
+
+        window.addEventListener('pagehide', function () {
+          autoPauseOnBackground();
+        });
+
+        let lastFrameTime = performance.now();
+
+        function frameLoop(now) {
+          const rawDt = Math.max(0.001, (now - lastFrameTime) / 1000);
+          lastFrameTime = now;
+
+          updateSimulation(rawDt);
+          renderScene();
+
+          requestAnimationFrame(frameLoop);
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('autostart') === '1') {
+          const orderParam = params.get('order');
+          resetGame(orderParam && ORDERS[orderParam] ? orderParam : 'pizza');
+          setBodyState('playing');
+        } else {
+          resetGame('pizza');
+          setBodyState('title');
+        }
+
+        requestAnimationFrame(frameLoop);
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Rush Delivery: Neon Courier",
+  "description": "Вертикальная аркадная игра в стиле неонового киберпанка про курьера на моноколесе с физикой баланса посылки.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
