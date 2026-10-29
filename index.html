@@ -35,11 +35,14 @@
     <style>
       :root {
         --bg-void: #05060d;
-        --bg-panel: rgba(10, 14, 28, 0.92);
+        --bg-panel: rgba(10, 14, 28, 0.94);
         --neon-cyan: #00f0ff;
         --neon-magenta: #ff2a85;
         --neon-emerald: #00ff9d;
         --neon-amber: #ffb800;
+        --neon-orange: #ff6b00;
+        --neon-purple: #a855f7;
+        --neon-ice: #38bdf8;
         --neon-red: #ff3355;
         --text-main: #f1f5f9;
         --text-muted: #94a3b8;
@@ -57,6 +60,12 @@
         -webkit-user-select: none;
         -webkit-touch-callout: none;
         -webkit-tap-highlight-color: transparent;
+      }
+
+      input,
+      textarea {
+        user-select: text;
+        -webkit-user-select: text;
       }
 
       html,
@@ -117,7 +126,7 @@
         touch-action: none;
       }
 
-      /* HUD Overlay Layer with iPhone Safe Area Insets (Dynamic Island & Home Indicator) */
+      /* HUD Overlay Layer with iPhone Safe Area Insets */
       .hud-layer {
         position: absolute;
         inset: 0;
@@ -133,8 +142,8 @@
         transition: opacity 0.2s ease;
       }
 
-      body[data-state='title'] .hud-layer,
-      body[data-state='orders'] .hud-layer,
+      body[data-state='auth'] .hud-layer,
+      body[data-state='tracks'] .hud-layer,
       body[data-state='garage'] .hud-layer {
         opacity: 0;
       }
@@ -180,7 +189,7 @@
       .stat-value {
         font-family: 'JetBrains Mono', monospace;
         font-variant-numeric: tabular-nums;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 800;
         color: var(--text-main);
         line-height: 1.2;
@@ -365,17 +374,18 @@
         flex-direction: column;
         align-items: center;
         justify-content: space-between;
-        padding-top: calc(18px + env(safe-area-inset-top, 0px));
-        padding-right: calc(16px + env(safe-area-inset-right, 0px));
-        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
-        padding-left: calc(16px + env(safe-area-inset-left, 0px));
+        padding-top: calc(14px + env(safe-area-inset-top, 0px));
+        padding-right: calc(13px + env(safe-area-inset-right, 0px));
+        padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        padding-left: calc(13px + env(safe-area-inset-left, 0px));
         background: linear-gradient(
           180deg,
-          rgba(5, 6, 13, 0.9) 0%,
-          rgba(5, 6, 13, 0.62) 45%,
-          rgba(5, 6, 13, 0.95) 100%
+          rgba(5, 6, 13, 0.92) 0%,
+          rgba(5, 6, 13, 0.68) 45%,
+          rgba(5, 6, 13, 0.96) 100%
         );
         transition: opacity 0.18s ease, visibility 0.18s ease;
+        overflow-y: auto;
       }
 
       .overlay-screen.hidden {
@@ -384,7 +394,7 @@
         pointer-events: none;
       }
 
-      /* Top Wallet Bar in Menus */
+      /* Top Bar in Menus */
       .menu-top-bar {
         width: 100%;
         display: flex;
@@ -393,14 +403,51 @@
         gap: 8px;
       }
 
-      .wallet-display {
+      .profile-chip {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         background: rgba(9, 14, 30, 0.92);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        border-radius: 12px;
+        padding: 5px 10px;
+      }
+
+      .profile-chip-name {
+        font-size: 13px;
+        font-weight: 800;
+        color: #ffffff;
+        max-width: 135px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .switch-profile-btn {
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        background: rgba(0, 240, 255, 0.12);
+        color: var(--neon-cyan);
+        font-family: 'Outfit', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.12s ease, transform 0.1s ease;
+      }
+
+      .switch-profile-btn:hover {
+        background: rgba(0, 240, 255, 0.24);
+      }
+
+      .wallet-display {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(9, 14, 30, 0.92);
         border: 1px solid rgba(255, 184, 0, 0.4);
         border-radius: 12px;
-        padding: 7px 12px;
+        padding: 6px 11px;
         box-shadow: 0 0 18px rgba(255, 184, 0, 0.15);
       }
 
@@ -415,7 +462,7 @@
       .wallet-amount {
         font-family: 'JetBrains Mono', monospace;
         font-variant-numeric: tabular-nums;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 800;
         color: var(--neon-amber);
         text-shadow: 0 0 10px rgba(255, 184, 0, 0.45);
@@ -427,17 +474,17 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
       }
 
       .title-svg-emblem {
-        width: 72px;
-        height: 72px;
-        filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.5));
+        width: 58px;
+        height: 58px;
+        filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.5));
       }
 
       .game-title {
-        font-size: clamp(28px, 7vw, 38px);
+        font-size: clamp(24px, 6.2vw, 33px);
         font-weight: 800;
         letter-spacing: -0.02em;
         line-height: 1.05;
@@ -445,14 +492,13 @@
         text-shadow:
           0 0 18px rgba(0, 240, 255, 0.6),
           0 0 36px rgba(255, 42, 133, 0.35);
-        text-wrap: balance;
       }
 
       .game-subtitle {
-        font-size: 13px;
+        font-size: 12.5px;
         color: #cbd5e1;
-        max-width: 32ch;
-        line-height: 1.4;
+        max-width: 34ch;
+        line-height: 1.35;
       }
 
       .modal-card {
@@ -460,37 +506,131 @@
         background: rgba(9, 13, 28, 0.95);
         border: 1px solid rgba(0, 240, 255, 0.32);
         border-radius: 18px;
-        padding: 16px 14px;
+        padding: 13px 12px;
         box-shadow:
           0 20px 50px rgba(0, 0, 0, 0.78),
           0 0 30px rgba(0, 240, 255, 0.12);
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
       }
 
-      .briefing-list {
+      /* Auth Screen Form & Saved Profiles List */
+      .auth-form {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        text-align: left;
+        width: 100%;
       }
 
-      .briefing-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 9px;
-        font-size: 12.5px;
-        line-height: 1.38;
-        color: #e2e8f0;
-      }
-
-      .briefing-index {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11.5px;
-        font-weight: 800;
+      .auth-input-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
         color: var(--neon-cyan);
-        min-width: 20px;
+      }
+
+      .auth-input-row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .auth-input {
+        flex: 1;
+        min-height: 44px;
+        border-radius: 11px;
+        border: 1px solid rgba(0, 240, 255, 0.38);
+        background: rgba(5, 8, 18, 0.92);
+        color: #ffffff;
+        font-family: 'Outfit', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 0 12px;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .auth-input:focus {
+        border-color: var(--neon-cyan);
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.32);
+      }
+
+      .auth-error {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--neon-red);
+        min-height: 15px;
+      }
+
+      .profiles-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        border-top: 1px solid rgba(148, 163, 184, 0.18);
+        padding-top: 9px;
+      }
+
+      .profiles-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        max-height: 176px;
+        overflow-y: auto;
+      }
+
+      .profile-item-btn {
+        width: 100%;
+        background: rgba(13, 19, 38, 0.92);
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        border-radius: 12px;
+        padding: 9px 11px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        cursor: pointer;
+        transition: border-color 0.12s ease, background 0.12s ease, transform 0.1s ease;
+      }
+
+      .profile-item-btn:hover {
+        border-color: var(--neon-cyan);
+        background: rgba(0, 240, 255, 0.1);
+      }
+
+      .profile-item-left {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+      }
+
+      .profile-item-name {
+        font-size: 14.5px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+
+      .profile-item-meta {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .profile-item-coins {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 13.5px;
+        font-weight: 800;
+        color: var(--neon-amber);
+        white-space: nowrap;
       }
 
       .btn-stack {
@@ -508,18 +648,18 @@
 
       .primary-cta {
         width: 100%;
-        min-height: 48px;
-        border-radius: 13px;
+        min-height: 44px;
+        border-radius: 12px;
         border: 1px solid #67f9ff;
         background: #00f0ff;
         color: #040711;
         font-family: 'Outfit', sans-serif;
-        font-size: 16px;
+        font-size: 14.5px;
         font-weight: 800;
         letter-spacing: 0.02em;
         cursor: pointer;
         box-shadow:
-          0 0 22px rgba(0, 240, 255, 0.5),
+          0 0 22px rgba(0, 240, 255, 0.45),
           inset 0 1px 0 rgba(255, 255, 255, 0.6);
         transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
         white-space: nowrap;
@@ -527,11 +667,12 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
+        padding: 0 14px;
       }
 
       .primary-cta:hover {
         background: #38f5ff;
-        box-shadow: 0 0 30px rgba(0, 240, 255, 0.78);
+        box-shadow: 0 0 28px rgba(0, 240, 255, 0.75);
       }
 
       .primary-cta:active {
@@ -540,13 +681,13 @@
 
       .secondary-cta {
         width: 100%;
-        min-height: 44px;
+        min-height: 42px;
         border-radius: 12px;
         border: 1px solid rgba(0, 240, 255, 0.32);
         background: rgba(15, 23, 42, 0.9);
         color: var(--text-main);
         font-family: 'Outfit', sans-serif;
-        font-size: 14px;
+        font-size: 13.5px;
         font-weight: 700;
         cursor: pointer;
         transition: background 0.12s ease, border-color 0.12s ease, transform 0.1s ease;
@@ -555,6 +696,7 @@
         align-items: center;
         justify-content: center;
         gap: 6px;
+        padding: 0 12px;
       }
 
       .secondary-cta:hover {
@@ -566,11 +708,83 @@
         transform: scale(0.97);
       }
 
-      /* Order Selection Cards */
+      /* Cargo selector bar inside Track screen */
+      .cargo-selector-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        background: rgba(5, 8, 18, 0.78);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 11px;
+        padding: 5px;
+      }
+
+      .cargo-tab-btn {
+        flex: 1;
+        min-height: 32px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-muted);
+        font-family: 'Outfit', sans-serif;
+        font-size: 11.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.12s ease;
+      }
+
+      .cargo-tab-btn.active {
+        background: rgba(0, 240, 255, 0.16);
+        border-color: rgba(0, 240, 255, 0.45);
+        color: #ffffff;
+      }
+
+      /* Garage Two-Tab Switcher (Апгрейды / Транспорт) */
+      .garage-tabs-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        background: rgba(5, 8, 18, 0.88);
+        border: 1px solid rgba(0, 240, 255, 0.28);
+        border-radius: 12px;
+        padding: 5px;
+      }
+
+      .garage-tab-btn {
+        min-height: 36px;
+        border-radius: 9px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-muted);
+        font-family: 'Outfit', sans-serif;
+        font-size: 12.5px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: all 0.14s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .garage-tab-btn.active {
+        background: rgba(0, 240, 255, 0.18);
+        border-color: var(--neon-cyan);
+        color: #ffffff;
+        box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+      }
+
+      .garage-panel.hidden {
+        display: none;
+      }
+
+      /* Track Selection Cards */
       .orders-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 9px;
         width: 100%;
       }
 
@@ -580,10 +794,10 @@
         background: rgba(13, 19, 38, 0.92);
         border: 1px solid rgba(148, 163, 184, 0.28);
         border-radius: 14px;
-        padding: 12px;
+        padding: 11px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 11px;
         cursor: pointer;
         color: var(--text-main);
         font-family: 'Outfit', sans-serif;
@@ -600,21 +814,21 @@
         transform: scale(0.98);
       }
 
-      .order-card.order-easy {
-        border-color: rgba(0, 255, 157, 0.4);
-      }
-
-      .order-card.order-medium {
+      .order-card.track-neon {
         border-color: rgba(0, 240, 255, 0.45);
       }
 
-      .order-card.order-hard {
-        border-color: rgba(255, 42, 133, 0.5);
+      .order-card.track-wasteland {
+        border-color: rgba(255, 107, 0, 0.55);
+      }
+
+      .order-card.track-skybridge {
+        border-color: rgba(56, 189, 248, 0.55);
       }
 
       .order-icon-box {
-        width: 52px;
-        height: 52px;
+        width: 46px;
+        height: 46px;
         border-radius: 12px;
         background: rgba(5, 8, 18, 0.9);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -634,11 +848,11 @@
         align-items: baseline;
         justify-content: space-between;
         gap: 6px;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
       }
 
       .order-name {
-        font-size: 15px;
+        font-size: 14.5px;
         font-weight: 800;
         color: #ffffff;
       }
@@ -646,7 +860,7 @@
       .order-reward {
         font-family: 'JetBrains Mono', monospace;
         font-variant-numeric: tabular-nums;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 800;
         color: var(--neon-amber);
         white-space: nowrap;
@@ -656,75 +870,78 @@
         font-size: 11px;
         font-weight: 700;
         color: var(--neon-cyan);
-        margin-bottom: 3px;
+        margin-bottom: 2px;
       }
 
       .order-desc {
-        font-size: 11.5px;
+        font-size: 11px;
         color: var(--text-muted);
-        line-height: 1.3;
+        line-height: 1.28;
       }
 
-      /* Garage / Upgrade Cards */
-      .upgrades-list {
+      /* Garage / 4 Branches × 7 Levels Upgrade Cards */
+      .upgrades-list,
+      .wheels-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 7px;
         width: 100%;
+        max-height: 390px;
+        overflow-y: auto;
       }
 
       .upgrade-row {
         background: rgba(13, 19, 38, 0.92);
         border: 1px solid rgba(148, 163, 184, 0.24);
-        border-radius: 14px;
-        padding: 11px 12px;
+        border-radius: 13px;
+        padding: 8px 10px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
       }
 
       .upgrade-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
+        gap: 6px;
       }
 
       .upgrade-title-group {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 1px;
       }
 
       .upgrade-name {
-        font-size: 14.5px;
+        font-size: 13.5px;
         font-weight: 800;
         color: #ffffff;
       }
 
       .upgrade-desc {
-        font-size: 11.5px;
+        font-size: 10.5px;
         color: var(--text-muted);
-        line-height: 1.3;
+        line-height: 1.24;
       }
 
       .upgrade-bottom {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
+        gap: 6px;
       }
 
       .level-pips {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 3px;
       }
 
       .level-pip {
-        width: 22px;
-        height: 7px;
-        border-radius: 4px;
+        width: 12px;
+        height: 6px;
+        border-radius: 3px;
         background: rgba(30, 41, 59, 0.95);
         border: 1px solid rgba(148, 163, 184, 0.3);
       }
@@ -732,27 +949,27 @@
       .level-pip.filled {
         background: var(--neon-emerald);
         border-color: #6ee7b7;
-        box-shadow: 0 0 8px rgba(0, 255, 157, 0.5);
+        box-shadow: 0 0 7px rgba(0, 255, 157, 0.5);
       }
 
       .level-text {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 700;
         color: var(--text-muted);
         margin-left: 4px;
       }
 
       .buy-upgrade-btn {
-        min-height: 36px;
-        padding: 6px 12px;
-        border-radius: 9px;
+        min-height: 32px;
+        padding: 4px 10px;
+        border-radius: 8px;
         border: 1px solid var(--neon-cyan);
         background: rgba(0, 240, 255, 0.16);
         color: #ffffff;
         font-family: 'JetBrains Mono', monospace;
         font-variant-numeric: tabular-nums;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 800;
         cursor: pointer;
         transition: background 0.12s ease, transform 0.1s ease;
@@ -771,6 +988,117 @@
         cursor: not-allowed;
       }
 
+      /* Monowheel Shop Cards */
+      .wheel-row {
+        background: rgba(13, 19, 38, 0.92);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 13px;
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 9px;
+        transition: border-color 0.14s ease, box-shadow 0.14s ease;
+      }
+
+      .wheel-row.equipped {
+        border-color: var(--neon-emerald);
+        box-shadow: 0 0 16px rgba(0, 255, 157, 0.16);
+      }
+
+      .wheel-left {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .wheel-swatch {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(5, 8, 18, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .wheel-info {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 0;
+      }
+
+      .wheel-title-line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .wheel-name {
+        font-size: 13.5px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+
+      .wheel-badge {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--neon-cyan);
+      }
+
+      .wheel-desc {
+        font-size: 10.5px;
+        color: var(--text-muted);
+        line-height: 1.22;
+      }
+
+      .wheel-action-btn {
+        min-height: 34px;
+        padding: 5px 10px;
+        border-radius: 9px;
+        border: 1px solid var(--neon-cyan);
+        background: rgba(0, 240, 255, 0.16);
+        color: #ffffff;
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.12s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .wheel-action-btn.state-equip {
+        border-color: var(--neon-amber);
+        background: rgba(255, 184, 0, 0.18);
+        color: #fde047;
+      }
+
+      .wheel-action-btn.state-equipped {
+        border-color: var(--neon-emerald);
+        background: rgba(0, 255, 157, 0.18);
+        color: var(--neon-emerald);
+        cursor: default;
+      }
+
+      .wheel-action-btn:hover:not(:disabled):not(.state-equipped) {
+        background: var(--neon-cyan);
+        color: #040711;
+      }
+
+      .wheel-action-btn:disabled:not(.state-equipped) {
+        opacity: 0.46;
+        border-color: rgba(148, 163, 184, 0.3);
+        background: rgba(15, 23, 42, 0.6);
+        cursor: not-allowed;
+      }
+
       .control-hint-footer {
         font-size: 11px;
         color: var(--text-muted);
@@ -784,11 +1112,11 @@
         text-align: center;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 2px;
       }
 
       .result-kicker {
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -796,14 +1124,14 @@
       }
 
       .result-title {
-        font-size: 24px;
+        font-size: 20px;
         font-weight: 800;
         color: #ffffff;
         line-height: 1.15;
       }
 
       .result-subtitle {
-        font-size: 12.5px;
+        font-size: 11.5px;
         color: var(--text-muted);
       }
 
@@ -902,7 +1230,7 @@
       }
     </style>
   </head>
-  <body data-state="title">
+  <body data-state="auth">
     <main class="app-stage">
       <div class="game-viewport" id="gameViewport">
         <canvas id="gameCanvas" data-testid="game-canvas"></canvas>
@@ -918,8 +1246,8 @@
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
-                  <span class="stat-kicker">Монеты</span>
-                  <span class="stat-value accent-amber" id="hudCoins">0</span>
+                  <span class="stat-kicker">Собрано</span>
+                  <span class="stat-value accent-amber" id="hudCoins">0 М</span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
@@ -1008,7 +1336,7 @@
 
               <div class="meter-box">
                 <div class="meter-header">
-                  <span class="meter-title">Маршрут</span>
+                  <span class="meter-title" id="hudTrackTitle">Маршрут</span>
                   <span class="meter-readout" id="hudDistText">0 / 1500 м</span>
                 </div>
                 <div class="meter-track">
@@ -1064,18 +1392,15 @@
           </div>
         </section>
 
-        <!-- 1. Main Title Screen -->
+        <!-- 1. Courier Authorization Screen (Multi-Account System) -->
         <section
           class="overlay-screen"
-          id="titleScreen"
-          aria-labelledby="titleHeading"
+          id="authScreen"
+          aria-labelledby="authHeading"
         >
           <div class="menu-top-bar">
-            <span class="wallet-label">Нео-Курьер v2.0</span>
-            <div class="wallet-display" aria-label="Баланс монет">
-              <span class="wallet-label">Баланс:</span>
-              <span class="wallet-amount" id="titleWalletAmount">150 М</span>
-            </div>
+            <span class="wallet-label">Терминал смены v6.0</span>
+            <span class="wallet-label" id="authProfilesCount">Профилей: 2</span>
           </div>
 
           <div class="title-hero">
@@ -1114,203 +1439,238 @@
                 fill="#05060D"
               />
             </svg>
-            <h1 class="game-title" id="titleHeading">RUSH DELIVERY</h1>
+            <h1 class="game-title" id="authHeading">АВТОРИЗАЦИЯ КУРЬЕРА</h1>
             <p class="game-subtitle">
-              Выбирай контракты, удерживай равновесие хрупких грузов на
-              моноколесе и прокачивай экипировку в гараже.
+              Введи новый позывной или выбери существующий профиль. Монеты,
+              моноколеса и прокачка сохраняются отдельно для каждого курьера.
             </p>
           </div>
 
           <div class="modal-card">
-            <div class="briefing-list">
-              <div class="briefing-row">
-                <span class="briefing-index">01.</span>
-                <span>
-                  <strong>3 типа заказов:</strong> Пицца (100 М), Хрустальная
-                  ваза (250 М, сильная инерция) и Аквариум с пираньями (500 М,
-                  волны воды).
-                </span>
+            <form class="auth-form" id="authForm" novalidate>
+              <label class="auth-input-label" for="profileNameInput">
+                Новый или существующий позывной
+              </label>
+              <div class="auth-input-row">
+                <input
+                  type="text"
+                  id="profileNameInput"
+                  class="auth-input"
+                  placeholder="Например: Alex"
+                  maxlength="18"
+                  autocomplete="off"
+                />
               </div>
-              <div class="briefing-row">
-                <span class="briefing-index">02.</span>
-                <span>
-                  <strong>Баланс (Tilt):</strong> на краях (-100 / +100) груз
-                  бьется. Короткий свайп в сторону наклона помогает поймать
-                  равновесие.
-                </span>
-              </div>
-              <div class="briefing-row">
-                <span class="briefing-index">03.</span>
-                <span>
-                  <strong>Гараж:</strong> покупай Гиро-стабилизатор, Титановую
-                  упаковку и Магнит чаевых за заработанные монеты.
-                </span>
-              </div>
+              <div class="auth-error" id="authErrorMsg" role="alert"></div>
+              <button
+                type="submit"
+                class="primary-cta"
+                id="btnCreateProfile"
+              >
+                Войти / Создать профиль
+              </button>
+            </form>
+
+            <div class="profiles-section-header">
+              <span>Сохраненные курьеры на устройстве</span>
+              <span>1 монета = 1 балл</span>
             </div>
 
-            <div class="btn-stack">
-              <button
-                type="button"
-                class="primary-cta"
-                id="btnOpenOrders"
-                data-start="true"
-              >
-                Начать смену · Выбор заказа
-              </button>
-              <button type="button" class="secondary-cta" id="btnOpenGarage">
-                Гараж / Прокачка
-              </button>
-            </div>
+            <div
+              class="profiles-list"
+              id="profilesList"
+              role="list"
+              aria-label="Список профилей курьеров"
+            ></div>
           </div>
 
           <p class="control-hint-footer">
-            Свайпы · Стрелки / WASD · Пробел баланс · P пауза
+            Мультиаккаунт · Моноколеса и апгрейды в localStorage
           </p>
         </section>
 
-        <!-- 2. Order Selection Screen (3 Cards) -->
+        <!-- 2. Track Selection Screen (3 Locations + Cargo Selector) -->
         <section
           class="overlay-screen hidden"
-          id="orderSelectScreen"
-          aria-labelledby="ordersHeading"
+          id="trackSelectScreen"
+          aria-labelledby="tracksHeading"
         >
           <div class="menu-top-bar">
-            <span class="wallet-label">Биржа контрактов</span>
-            <div class="wallet-display">
-              <span class="wallet-label">Баланс:</span>
-              <span class="wallet-amount" id="ordersWalletAmount">150 М</span>
+            <div class="profile-chip">
+              <span class="profile-chip-name" id="activeCourierName">Alex</span>
+              <button
+                type="button"
+                class="switch-profile-btn"
+                id="btnSwitchProfile"
+                aria-label="Сменить профиль курьера"
+              >
+                Сменить
+              </button>
+            </div>
+            <div class="wallet-display" aria-label="Баланс профиля">
+              <span class="wallet-label">Монеты:</span>
+              <span class="wallet-amount" id="tracksWalletAmount">0 М</span>
             </div>
           </div>
 
           <div class="modal-card">
             <div class="result-header">
-              <span class="result-kicker">Дистанция 1500 м · Лимит 60 сек</span>
-              <h2 class="result-title" id="ordersHeading">Выбери заказ на смену</h2>
+              <span class="result-kicker" id="tracksWheelKicker">
+                Колесо: Классика · Выбери маршрут
+              </span>
+              <h2 class="result-title" id="tracksHeading">Выбери трассу заезда</h2>
               <p class="result-subtitle">
-                Кликни по карточке груза, чтобы немедленно выехать на трассу.
+                Каждая собранная монета = 1 балл × множитель сложности трассы.
               </p>
             </div>
 
-            <div class="orders-list">
-              <!-- Card 1: Pizza Box -->
+            <div
+              class="cargo-selector-row"
+              role="group"
+              aria-label="Выбор типа посылки"
+            >
               <button
                 type="button"
-                class="order-card order-easy"
-                data-order="pizza"
-                id="btnOrderPizza"
+                class="cargo-tab-btn active"
+                data-cargo="pizza"
+                id="btnCargoPizza"
+              >
+                Пицца (Стандарт)
+              </button>
+              <button
+                type="button"
+                class="cargo-tab-btn"
+                data-cargo="vase"
+                id="btnCargoVase"
+              >
+                Ваза (Инерция)
+              </button>
+              <button
+                type="button"
+                class="cargo-tab-btn"
+                data-cargo="aquarium"
+                id="btnCargoAquarium"
+              >
+                Аквариум (Волна)
+              </button>
+            </div>
+
+            <div class="orders-list">
+              <!-- Track 1: Neon City -->
+              <button
+                type="button"
+                class="order-card track-neon"
+                data-track="neon_city"
+                id="btnTrackNeonCity"
               >
                 <div class="order-icon-box" aria-hidden="true">
-                  <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
-                    <rect
-                      x="4"
-                      y="14"
-                      width="32"
-                      height="14"
-                      rx="3"
-                      fill="#2A1215"
-                      stroke="#00FF9D"
-                      stroke-width="2.2"
-                    />
+                  <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
                     <path
-                      d="M14 21L26 21M20 15V27"
-                      stroke="#FFB800"
-                      stroke-width="2"
+                      d="M6 34L15 10H25L34 34"
+                      stroke="#00F0FF"
+                      stroke-width="2.4"
                       stroke-linecap="round"
                     />
-                  </svg>
-                </div>
-                <div class="order-info">
-                  <div class="order-top-line">
-                    <span class="order-name">Коробка с пиццей</span>
-                    <span class="order-reward">+100 М</span>
-                  </div>
-                  <div class="order-meta" style="color: #00ff9d">
-                    Легкий · Рывок свайпа ±35
-                  </div>
-                  <div class="order-desc">
-                    Стандартный баланс и предсказуемый центр тяжести.
-                  </div>
-                </div>
-              </button>
-
-              <!-- Card 2: Crystal Vase -->
-              <button
-                type="button"
-                class="order-card order-medium"
-                data-order="vase"
-                id="btnOrderVase"
-              >
-                <div class="order-icon-box" aria-hidden="true">
-                  <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
-                    <path
-                      d="M15 7H25L22 15L28 24L24 34H16L12 24L18 15L15 7Z"
-                      fill="#121E36"
-                      stroke="#00F0FF"
-                      stroke-width="2.2"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M18 15H22M14 24H26"
+                    <line
+                      x1="20"
+                      y1="12"
+                      x2="20"
+                      y2="34"
                       stroke="#FF2A85"
-                      stroke-width="1.6"
+                      stroke-width="2.2"
+                      stroke-dasharray="3 3"
                     />
                   </svg>
                 </div>
                 <div class="order-info">
                   <div class="order-top-line">
-                    <span class="order-name">Хрустальная ваза</span>
-                    <span class="order-reward">+250 М</span>
+                    <span class="order-name">Неоновый Сити</span>
+                    <span class="order-reward">Множитель x1</span>
                   </div>
                   <div class="order-meta" style="color: #00f0ff">
-                    Средний · Сильная раскачка ±50
+                    Базовая · Стандартная скорость и трафик
                   </div>
                   <div class="order-desc">
-                    Высокий силуэт: свайпы сильнее раскачивают баланс (+50 вместо
-                    +35).
+                    Широкий кибер-проспект без бокового ветра. Идеально для старта.
                   </div>
                 </div>
               </button>
 
-              <!-- Card 3: Piranha Aquarium -->
+              <!-- Track 2: Cyber-Wasteland -->
               <button
                 type="button"
-                class="order-card order-hard"
-                data-order="aquarium"
-                id="btnOrderAquarium"
+                class="order-card track-wasteland"
+                data-track="cyber_wasteland"
+                id="btnTrackWasteland"
               >
                 <div class="order-icon-box" aria-hidden="true">
-                  <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
-                    <rect
-                      x="5"
-                      y="10"
-                      width="30"
-                      height="22"
-                      rx="4"
-                      fill="#091D2E"
-                      stroke="#FF2A85"
-                      stroke-width="2.2"
-                    />
+                  <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
                     <path
-                      d="M7 19C12 16 16 22 21 19C26 16 30 22 33 19"
-                      stroke="#00F0FF"
-                      stroke-width="2"
+                      d="M5 15H29C32 15 34 13 34 10C34 7 31 6 29 8"
+                      stroke="#FF6B00"
+                      stroke-width="2.4"
                       stroke-linecap="round"
                     />
-                    <circle cx="16" cy="25" r="3" fill="#FFB800" />
-                    <polygon points="19,25 23,22 23,28" fill="#FFB800" />
+                    <path
+                      d="M4 23H33C36 23 37 26 34 28"
+                      stroke="#FF2E4C"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M8 30H24"
+                      stroke="#FFB800"
+                      stroke-width="2.2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </div>
                 <div class="order-info">
                   <div class="order-top-line">
-                    <span class="order-name">Аквариум с пираньями</span>
-                    <span class="order-reward">+500 М</span>
+                    <span class="order-name">Кибер-Пустошь</span>
+                    <span class="order-reward">Множитель x1.5</span>
                   </div>
-                  <div class="order-meta" style="color: #ff2a85">
-                    Сложный · Эффект волны 3 сек
+                  <div class="order-meta" style="color: #ff6b00">
+                    Сложная физика · Боковой ветер · Оранжево-красная
                   </div>
                   <div class="order-desc">
-                    После каждого свайпа вода внутри плещется и качает груз
-                    синусоидой 3 секунды.
+                    Порывы бури сами отклоняют баланс влево и вправо во время езды.
+                  </div>
+                </div>
+              </button>
+
+              <!-- Track 3: Sky-Bridge -->
+              <button
+                type="button"
+                class="order-card track-skybridge"
+                data-track="sky_bridge"
+                id="btnTrackSkyBridge"
+              >
+                <div class="order-icon-box" aria-hidden="true">
+                  <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+                    <path
+                      d="M12 34L17 8H23L28 34"
+                      stroke="#E0F2FE"
+                      stroke-width="2.4"
+                    />
+                    <path
+                      d="M6 22L20 12L34 22"
+                      stroke="#38BDF8"
+                      stroke-width="2"
+                    />
+                    <circle cx="20" cy="8" r="3" fill="#38BDF8" />
+                  </svg>
+                </div>
+                <div class="order-info">
+                  <div class="order-top-line">
+                    <span class="order-name">Скай-Бридж</span>
+                    <span class="order-reward">Множитель x2</span>
+                  </div>
+                  <div class="order-meta" style="color: #38bdf8">
+                    Скоростная · Узкая дорога · Скорость +30% · Сине-белая
+                  </div>
+                  <div class="order-desc">
+                    Высотная эстакада: суженная проезжая часть и быстрый поток угроз.
                   </div>
                 </div>
               </button>
@@ -1320,131 +1680,401 @@
               <button
                 type="button"
                 class="secondary-cta"
-                id="btnBackFromOrders"
+                id="btnOpenGarageFromTracks"
               >
-                ← В меню
-              </button>
-              <button
-                type="button"
-                class="secondary-cta"
-                id="btnOrdersToGarage"
-              >
-                Гараж / Прокачка
+                Гараж: Апгрейды и Моноколеса
               </button>
             </div>
           </div>
 
           <p class="control-hint-footer">
-            Клавиши 1 / 2 / 3 или клик для быстрого выбора заказа
+            Клавиши 1 / 2 / 3 или тап по трассе для немедленного старта
           </p>
         </section>
 
-        <!-- 3. Garage / Upgrades Screen -->
+        <!-- 3. Expanded Garage Screen (Two Tabs: «Апгрейды» & «Транспорт») -->
         <section
           class="overlay-screen hidden"
           id="garageScreen"
           aria-labelledby="garageHeading"
         >
           <div class="menu-top-bar">
-            <span class="wallet-label">Мастерская курьера</span>
+            <div class="profile-chip">
+              <span class="profile-chip-name" id="garageCourierName">Alex</span>
+            </div>
             <div class="wallet-display">
-              <span class="wallet-label">Баланс:</span>
-              <span class="wallet-amount" id="garageWalletAmount">150 М</span>
+              <span class="wallet-label">Монеты:</span>
+              <span class="wallet-amount" id="garageWalletAmount">0 М</span>
             </div>
           </div>
 
           <div class="modal-card">
             <div class="result-header">
-              <span class="result-kicker">Модификации моноколеса и контейнера</span>
-              <h2 class="result-title" id="garageHeading">Гараж / Прокачка</h2>
-              <p class="result-subtitle">
-                Все улучшения автоматически сохраняются в памяти терминала.
-              </p>
+              <span class="result-kicker" id="garageEquippedKicker">
+                Экипировано: Классика (Желтый шлейф)
+              </span>
+              <h2 class="result-title" id="garageHeading">Кибер-Гараж</h2>
             </div>
 
-            <div class="upgrades-list">
-              <!-- Upgrade 1: Gyro-Stabilizer -->
-              <div class="upgrade-row">
-                <div class="upgrade-top">
-                  <div class="upgrade-title-group">
-                    <span class="upgrade-name">Гиро-стабилизатор</span>
-                    <span class="upgrade-desc" id="descGyro">
-                      Уменьшает рывок баланса при свайпах на 15% / 30% / 45%.
-                    </span>
+            <!-- Two-Tab Navigation: Апгрейды vs Транспорт -->
+            <div
+              class="garage-tabs-row"
+              role="tablist"
+              aria-label="Разделы гаража"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected="true"
+                class="garage-tab-btn active"
+                id="tabGarageUpgrades"
+                data-garage-tab="upgrades"
+              >
+                Апгрейды (7 ур.)
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected="false"
+                class="garage-tab-btn"
+                id="tabGarageWheels"
+                data-garage-tab="wheels"
+              >
+                Транспорт (4 колеса)
+              </button>
+            </div>
+
+            <!-- TAB 1: АПГРЕЙДЫ (4 ветки по 7 уровней: 50, 120, 250, 500, 900, 1500, 2500) -->
+            <div
+              class="garage-panel"
+              id="garagePanelUpgrades"
+              role="tabpanel"
+              aria-labelledby="tabGarageUpgrades"
+            >
+              <div class="upgrades-list">
+                <!-- Branch 1: Стабилизатор -->
+                <div class="upgrade-row">
+                  <div class="upgrade-top">
+                    <div class="upgrade-title-group">
+                      <span class="upgrade-name">1. Стабилизатор</span>
+                      <span class="upgrade-desc">
+                        Гасит силу инерции при резких свайпах и ветре (до -56%).
+                      </span>
+                    </div>
+                  </div>
+                  <div class="upgrade-bottom">
+                    <div class="level-pips" id="pipsStabilizer">
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-text" id="lvlTextStabilizer">Ур. 0/7</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="buy-upgrade-btn"
+                      id="btnBuyStabilizer"
+                      data-upgrade="stabilizer"
+                    >
+                      Ур.1 · 50 М
+                    </button>
                   </div>
                 </div>
-                <div class="upgrade-bottom">
-                  <div class="level-pips" id="pipsGyro">
-                    <span class="level-pip"></span>
-                    <span class="level-pip"></span>
-                    <span class="level-pip"></span>
-                    <span class="level-text" id="lvlTextGyro">0/3</span>
+
+                <!-- Branch 2: Броня -->
+                <div class="upgrade-row">
+                  <div class="upgrade-top">
+                    <div class="upgrade-title-group">
+                      <span class="upgrade-name">2. Броня</span>
+                      <span class="upgrade-desc">
+                        Снижает процент урона по посылке при ударах (до -60%).
+                      </span>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    class="buy-upgrade-btn"
-                    id="btnBuyGyro"
-                    data-upgrade="gyro"
-                  >
-                    150 М
-                  </button>
+                  <div class="upgrade-bottom">
+                    <div class="level-pips" id="pipsArmor">
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-text" id="lvlTextArmor">Ур. 0/7</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="buy-upgrade-btn"
+                      id="btnBuyArmor"
+                      data-upgrade="armor"
+                    >
+                      Ур.1 · 50 М
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Branch 3: Неоновый Магнит -->
+                <div class="upgrade-row">
+                  <div class="upgrade-top">
+                    <div class="upgrade-title-group">
+                      <span class="upgrade-name">3. Неоновый Магнит</span>
+                      <span class="upgrade-desc">
+                        Притягивает монеты с соседних полос, радиус растет с уровнем.
+                      </span>
+                    </div>
+                  </div>
+                  <div class="upgrade-bottom">
+                    <div class="level-pips" id="pipsMagnet">
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-text" id="lvlTextMagnet">Ур. 0/7</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="buy-upgrade-btn"
+                      id="btnBuyMagnet"
+                      data-upgrade="magnet"
+                    >
+                      Ур.1 · 50 М
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Branch 4: Форсаж -->
+                <div class="upgrade-row">
+                  <div class="upgrade-top">
+                    <div class="upgrade-title-group">
+                      <span class="upgrade-name">4. Форсаж</span>
+                      <span class="upgrade-desc">
+                        Ускоряет пассивное выравнивание баланса при езде прямо.
+                      </span>
+                    </div>
+                  </div>
+                  <div class="upgrade-bottom">
+                    <div class="level-pips" id="pipsAfterburner">
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-pip"></span>
+                      <span class="level-text" id="lvlTextAfterburner">Ур. 0/7</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="buy-upgrade-btn"
+                      id="btnBuyAfterburner"
+                      data-upgrade="afterburner"
+                    >
+                      Ур.1 · 50 М
+                    </button>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <!-- Upgrade 2: Titanium Packaging -->
-              <div class="upgrade-row">
-                <div class="upgrade-top">
-                  <div class="upgrade-title-group">
-                    <span class="upgrade-name">Титановая упаковка</span>
-                    <span class="upgrade-desc" id="descTitanium">
-                      Снижает урон по посылке от ударов и падений на 20% / 35% /
-                      50%.
-                    </span>
-                  </div>
-                </div>
-                <div class="upgrade-bottom">
-                  <div class="level-pips" id="pipsTitanium">
-                    <span class="level-pip"></span>
-                    <span class="level-pip"></span>
-                    <span class="level-pip"></span>
-                    <span class="level-text" id="lvlTextTitanium">0/3</span>
+            <!-- TAB 2: ТРАНСПОРТ (Магазин моноколес: Классика, Спидстер, Тяжеловес, Призрак) -->
+            <div
+              class="garage-panel hidden"
+              id="garagePanelWheels"
+              role="tabpanel"
+              aria-labelledby="tabGarageWheels"
+            >
+              <div class="wheels-list">
+                <!-- Wheel 1: Классика (Classic) -->
+                <div class="wheel-row equipped" id="wheelCardClassic">
+                  <div class="wheel-left">
+                    <div class="wheel-swatch" aria-hidden="true">
+                      <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+                        <rect
+                          x="10"
+                          y="3"
+                          width="12"
+                          height="26"
+                          rx="6"
+                          fill="#090D1A"
+                          stroke="#FFB800"
+                          stroke-width="3"
+                        />
+                        <line
+                          x1="16"
+                          y1="8"
+                          x2="16"
+                          y2="24"
+                          stroke="#FDE047"
+                          stroke-width="2"
+                        />
+                      </svg>
+                    </div>
+                    <div class="wheel-info">
+                      <div class="wheel-title-line">
+                        <span class="wheel-name">Классика</span>
+                        <span class="wheel-badge" style="color: #ffb800">
+                          Желтый шлейф
+                        </span>
+                      </div>
+                      <span class="wheel-desc">
+                        Базовые статы, стандартная ширина. Открыто по умолчанию.
+                      </span>
+                    </div>
                   </div>
                   <button
                     type="button"
-                    class="buy-upgrade-btn"
-                    id="btnBuyTitanium"
-                    data-upgrade="titanium"
+                    class="wheel-action-btn state-equipped"
+                    id="btnWheelClassic"
+                    data-wheel="classic"
                   >
-                    150 М
+                    Экипировано
                   </button>
                 </div>
-              </div>
 
-              <!-- Upgrade 3: Tip Magnet -->
-              <div class="upgrade-row">
-                <div class="upgrade-top">
-                  <div class="upgrade-title-group">
-                    <span class="upgrade-name">Магнит чаевых</span>
-                    <span class="upgrade-desc" id="descMagnet">
-                      Притягивает монеты с соседних полос (радиус и скорость
-                      растут).
-                    </span>
-                  </div>
-                </div>
-                <div class="upgrade-bottom">
-                  <div class="level-pips" id="pipsMagnet">
-                    <span class="level-pip"></span>
-                    <span class="level-pip"></span>
-                    <span class="level-pip"></span>
-                    <span class="level-text" id="lvlTextMagnet">0/3</span>
+                <!-- Wheel 2: Спидстер (Speedster - 200 М) -->
+                <div class="wheel-row" id="wheelCardSpeedster">
+                  <div class="wheel-left">
+                    <div class="wheel-swatch" aria-hidden="true">
+                      <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+                        <rect
+                          x="11"
+                          y="3"
+                          width="10"
+                          height="26"
+                          rx="5"
+                          fill="#090D1A"
+                          stroke="#00F0FF"
+                          stroke-width="2.8"
+                        />
+                        <line
+                          x1="16"
+                          y1="7"
+                          x2="16"
+                          y2="25"
+                          stroke="#38BDF8"
+                          stroke-width="2"
+                        />
+                      </svg>
+                    </div>
+                    <div class="wheel-info">
+                      <div class="wheel-title-line">
+                        <span class="wheel-name">Спидстер</span>
+                        <span class="wheel-badge" style="color: #00f0ff">
+                          Скорость +15% · Синий
+                        </span>
+                      </div>
+                      <span class="wheel-desc">
+                        Узкое скоростное колесо с синим неоновым шлейфом.
+                      </span>
+                    </div>
                   </div>
                   <button
                     type="button"
-                    class="buy-upgrade-btn"
-                    id="btnBuyMagnet"
-                    data-upgrade="magnet"
+                    class="wheel-action-btn"
+                    id="btnWheelSpeedster"
+                    data-wheel="speedster"
                   >
-                    150 М
+                    Купить · 200 М
+                  </button>
+                </div>
+
+                <!-- Wheel 3: Тяжеловес (Heavy Duty - 600 М) -->
+                <div class="wheel-row" id="wheelCardHeavyDuty">
+                  <div class="wheel-left">
+                    <div class="wheel-swatch" aria-hidden="true">
+                      <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+                        <rect
+                          x="7"
+                          y="3"
+                          width="18"
+                          height="26"
+                          rx="7"
+                          fill="#090D1A"
+                          stroke="#FF6B00"
+                          stroke-width="3.2"
+                        />
+                        <line
+                          x1="16"
+                          y1="7"
+                          x2="16"
+                          y2="25"
+                          stroke="#FB923C"
+                          stroke-width="2.4"
+                        />
+                      </svg>
+                    </div>
+                    <div class="wheel-info">
+                      <div class="wheel-title-line">
+                        <span class="wheel-name">Тяжеловес</span>
+                        <span class="wheel-badge" style="color: #ff6b00">
+                          Крен -20% · Оранжевый
+                        </span>
+                      </div>
+                      <span class="wheel-desc">
+                        Наклон растет на 20% медленнее, плавная смена полос.
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="wheel-action-btn"
+                    id="btnWheelHeavyDuty"
+                    data-wheel="heavy_duty"
+                  >
+                    Купить · 600 М
+                  </button>
+                </div>
+
+                <!-- Wheel 4: Призрак (Phantom - 1500 М) -->
+                <div class="wheel-row" id="wheelCardPhantom">
+                  <div class="wheel-left">
+                    <div class="wheel-swatch" aria-hidden="true">
+                      <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+                        <rect
+                          x="11.5"
+                          y="3"
+                          width="9"
+                          height="26"
+                          rx="4.5"
+                          fill="#090D1A"
+                          stroke="#A855F7"
+                          stroke-width="2.6"
+                        />
+                        <line
+                          x1="16"
+                          y1="7"
+                          x2="16"
+                          y2="25"
+                          stroke="#E879F9"
+                          stroke-width="2"
+                        />
+                      </svg>
+                    </div>
+                    <div class="wheel-info">
+                      <div class="wheel-title-line">
+                        <span class="wheel-name">Призрак</span>
+                        <span class="wheel-badge" style="color: #a855f7">
+                          Хитбокс -32% · Фиолетовый
+                        </span>
+                      </div>
+                      <span class="wheel-desc">
+                        Уменьшенный хитбокс: легко проскальзывать между машинами.
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="wheel-action-btn"
+                    id="btnWheelPhantom"
+                    data-wheel="phantom"
+                  >
+                    Купить · 1500 М
                   </button>
                 </div>
               </div>
@@ -1454,22 +2084,22 @@
               <button
                 type="button"
                 class="secondary-cta"
-                id="btnBackFromGarage"
+                id="btnGarageToAuth"
               >
-                ← В меню
+                Профили
               </button>
               <button
                 type="button"
                 class="primary-cta"
-                id="btnGarageToOrders"
+                id="btnGarageToTracks"
               >
-                К заказам →
+                К выбору трассы →
               </button>
             </div>
           </div>
 
           <p class="control-hint-footer">
-            Прогресс и баланс автоматически сохраняются в localStorage
+            Все покупки и экипировка сохраняются в профиле курьера
           </p>
         </section>
 
@@ -1490,38 +2120,40 @@
             </div>
 
             <button type="button" class="primary-cta" id="btnResumeShift">
-              Продолжить смену
+              Продолжить заезд
             </button>
             <button type="button" class="secondary-cta" id="btnRestartFromPause">
-              Перезапустить этот заказ
+              Перезапустить трассу
             </button>
-            <button type="button" class="secondary-cta" id="btnExitToTitle">
-              В главное меню
+            <button type="button" class="secondary-cta" id="btnExitToTracks">
+              К выбору трассы
             </button>
           </div>
           <p class="control-hint-footer">Нажми Esc или P для возврата в игру</p>
         </section>
 
-        <!-- 5. Victory / Defeat Modal -->
+        <!-- 5. Victory / Defeat Modal (Rebalanced Economy Receipt) -->
         <section
           class="overlay-screen hidden"
           id="gameOverScreen"
           aria-labelledby="resultHeading"
         >
           <div class="menu-top-bar">
-            <span class="wallet-label">Итог рейса</span>
+            <div class="profile-chip">
+              <span class="profile-chip-name" id="resultCourierName">Alex</span>
+            </div>
             <div class="wallet-display">
-              <span class="wallet-label">Всего на счету:</span>
-              <span class="wallet-amount" id="resultWalletAmount">150 М</span>
+              <span class="wallet-label">На счету:</span>
+              <span class="wallet-amount" id="resultWalletAmount">0 М</span>
             </div>
           </div>
 
           <div class="modal-card">
             <div class="result-header">
               <span class="result-kicker" id="resultKicker">Отчет курьера</span>
-              <h2 class="result-title" id="resultHeading">Смена завершена!</h2>
+              <h2 class="result-title" id="resultHeading">Заезд завершен!</h2>
               <p class="result-subtitle" id="resultSubtitle">
-                Заказ доставлен в неоновый сектор вовремя.
+                Заказ доставлен в целевой сектор.
               </p>
             </div>
 
@@ -1542,24 +2174,16 @@
 
             <div class="receipt-box">
               <div class="receipt-line">
-                <span id="resOrderLabel">Оплата по заказу</span>
-                <span class="mono" id="resBasePay">+100 М</span>
+                <span>Собрано монет на трассе (1 М = 1 балл)</span>
+                <span class="mono" id="resCollectedCoins">0 М</span>
               </div>
               <div class="receipt-line">
-                <span>Чаевые за целостность груза</span>
-                <span class="mono" id="resConditionTip">+60 М</span>
-              </div>
-              <div class="receipt-line">
-                <span>Бонус за запас времени</span>
-                <span class="mono" id="resSpeedTip">+80 М</span>
-              </div>
-              <div class="receipt-line">
-                <span>Собранные монеты на трассе</span>
-                <span class="mono" id="resCoinBonus">+150 М</span>
+                <span id="resTrackMultLabel">Множитель трассы (x1)</span>
+                <span class="mono" id="resTrackBonus">+0 М</span>
               </div>
               <div class="receipt-total">
-                <span class="receipt-total-label">Начислено на баланс</span>
-                <span class="receipt-total-val" id="resTotalPay">+390 М</span>
+                <span class="receipt-total-label">Зачислено в профиль</span>
+                <span class="receipt-total-val" id="resTotalPay">+0 М</span>
               </div>
             </div>
 
@@ -1570,7 +2194,7 @@
                 id="btnPlayAgain"
                 data-start="true"
               >
-                Выбрать следующий заказ
+                Выбрать трассу · Новый заезд
               </button>
               <button
                 type="button"
@@ -1582,7 +2206,7 @@
             </div>
           </div>
           <p class="control-hint-footer">
-            Нажми Enter или Пробел для выбора нового заказа
+            Нажми Enter или Пробел для возврата к выбору трассы
           </p>
         </section>
       </div>
@@ -1592,10 +2216,17 @@
       (function () {
         'use strict';
 
-        // Block iOS Safari / mobile browser elastic scroll and pinch-zoom
+        // Block iOS Safari elastic scroll & pinch zoom except inside scrollable lists
         document.addEventListener(
           'touchmove',
           function (e) {
+            if (
+              e.target &&
+              e.target.closest &&
+              e.target.closest('.profiles-list, .upgrades-list, .wheels-list')
+            ) {
+              return;
+            }
             e.preventDefault();
           },
           { passive: false }
@@ -1673,7 +2304,6 @@
             osc.stop(now + duration + 0.01);
           }
 
-          // Короткий футуристичный «вжух» (свист резонансного фильтра) при свайпе влево/вправо
           swipe(caughtBalance = false) {
             if (this.muted) return;
             this.init();
@@ -1715,19 +2345,16 @@
             }
           }
 
-          // Приятный высокий звон (два быстрых тона мажорного аккорда) при сборе монеты
           coin() {
             if (this.muted) return;
             this.init();
             if (!this.ctx) return;
 
-            // Два быстрых высоких тона мажорного трезвучия (C6 -> E6 + легкий обертон G6)
             this.playTone(1046.5, 1052.0, 0.11, 'sine', 0.14, 0);
             this.playTone(1318.51, 1326.0, 0.17, 'triangle', 0.15, 0.065);
             this.playTone(1567.98, 1572.0, 0.14, 'sine', 0.07, 0.065);
           }
 
-          // Тревожный прерывистый писк (бип-бип) в опасной красной зоне баланса (>75 или <-75)
           dangerBeep() {
             if (this.muted) return;
             this.init();
@@ -1737,7 +2364,6 @@
             this.playTone(1046.5, 987.77, 0.055, 'square', 0.07, 0.08);
           }
 
-          // Мощный низкочастотный взрыв (шум + спад частоты) при ударе или потере HP груза
           explosion() {
             if (this.muted) return;
             this.init();
@@ -1746,7 +2372,6 @@
             const now = this.ctx.currentTime;
             const dur = 0.44;
 
-            // 1. Filtered noise blast with falling lowpass cutoff
             if (this.noiseBuffer) {
               const noise = this.ctx.createBufferSource();
               noise.buffer = this.noiseBuffer;
@@ -1769,13 +2394,8 @@
               noise.stop(now + dur + 0.02);
             }
 
-            // 2. Sub-bass frequency drop (165 Hz -> 28 Hz)
             this.playTone(165, 28, dur, 'sawtooth', 0.22, 0);
             this.playTone(110, 24, dur * 0.95, 'sine', 0.24, 0);
-          }
-
-          crash() {
-            this.explosion();
           }
 
           boost() {
@@ -1795,20 +2415,24 @@
             this.playTone(783.99, 1046.5, 0.16, 'sine', 0.14, 0.07);
           }
 
-          // Победная мелодия на финише
+          equip() {
+            this.playTone(440, 659.25, 0.09, 'sine', 0.12, 0);
+            this.playTone(659.25, 880, 0.12, 'triangle', 0.12, 0.05);
+          }
+
           victory() {
             if (this.muted) return;
             this.init();
             if (!this.ctx) return;
 
             const melody = [
-              { f: 523.25, d: 0.12, t: 0.0 },   // C5
-              { f: 659.25, d: 0.12, t: 0.09 },  // E5
-              { f: 783.99, d: 0.12, t: 0.18 },  // G5
-              { f: 1046.5, d: 0.16, t: 0.27 },  // C6
-              { f: 783.99, d: 0.11, t: 0.42 },  // G5
-              { f: 1046.5, d: 0.36, t: 0.52 },  // C6
-              { f: 1318.51, d: 0.36, t: 0.52 }, // E6 harmony
+              { f: 523.25, d: 0.12, t: 0.0 },
+              { f: 659.25, d: 0.12, t: 0.09 },
+              { f: 783.99, d: 0.12, t: 0.18 },
+              { f: 1046.5, d: 0.16, t: 0.27 },
+              { f: 783.99, d: 0.11, t: 0.42 },
+              { f: 1046.5, d: 0.36, t: 0.52 },
+              { f: 1318.51, d: 0.36, t: 0.52 },
             ];
             melody.forEach((n) => {
               this.playTone(n.f, n.f * 1.008, n.d, 'triangle', 0.13, n.t);
@@ -1828,7 +2452,6 @@
         }
 
         const sound = new SoundEngine();
-        const audio = sound;
 
         // ============================================================================
         // 1B. HAPTIC FEEDBACK (Vibration API with Safe iOS Safari Fallback)
@@ -1842,44 +2465,105 @@
               navigator.vibrate(pattern);
             }
           } catch (e) {
-            // Safe no-op on iOS Safari where navigator.vibrate is unsupported
+            // Safe no-op on iOS Safari
           }
+        }
+
+        function bindTouchPulse(el) {
+          if (!el || el.dataset.pulseBound === '1') return;
+          el.dataset.pulseBound = '1';
+          const triggerVisualPulse = () => {
+            if (el.disabled) return;
+            el.classList.remove('touch-pulse');
+            void el.offsetWidth;
+            el.classList.add('touch-pulse');
+            triggerHaptic(10);
+          };
+          el.addEventListener('touchstart', triggerVisualPulse, { passive: true });
+          el.addEventListener('mousedown', triggerVisualPulse);
+          el.addEventListener('animationend', () => {
+            el.classList.remove('touch-pulse');
+          });
         }
 
         function attachTouchPulseFeedback() {
           const buttons = document.querySelectorAll(
-            'button, .order-card, .ctrl-pad-btn, .icon-btn, .primary-cta, .secondary-cta, .buy-upgrade-btn'
+            'button, .order-card, .ctrl-pad-btn, .icon-btn, .primary-cta, .secondary-cta, .buy-upgrade-btn, .wheel-action-btn, .garage-tab-btn, .profile-item-btn, .cargo-tab-btn'
           );
-          buttons.forEach((btn) => {
-            const triggerVisualPulse = () => {
-              if (btn.disabled) return;
-              btn.classList.remove('touch-pulse');
-              void btn.offsetWidth;
-              btn.classList.add('touch-pulse');
-              triggerHaptic(10);
-            };
-            btn.addEventListener('touchstart', triggerVisualPulse, {
-              passive: true,
-            });
-            btn.addEventListener('mousedown', triggerVisualPulse);
-            btn.addEventListener('animationend', () => {
-              btn.classList.remove('touch-pulse');
-            });
-          });
+          buttons.forEach(bindTouchPulse);
         }
 
         // ============================================================================
-        // 2. ORDERS, UPGRADES & LOCALSTORAGE PERSISTENCE
+        // 2. MULTI-PROFILE SYSTEM, MONOWHEELS SHOP & 7-LEVEL UPGRADES CONFIG
         // ============================================================================
-        const STORAGE_KEY = 'rush_delivery_save_v1';
+        const PROFILES_STORAGE_KEY = 'rush_delivery_profiles_v2';
+        const ACTIVE_PROFILE_KEY = 'rush_delivery_active_courier_v2';
+        const SETTINGS_STORAGE_KEY = 'rush_delivery_settings_v2';
+
+        const MAX_UPGRADE_LEVEL = 7;
+        const UPGRADE_COSTS = [50, 120, 250, 500, 900, 1500, 2500];
+
+        // 4 вида моноколес в магазине «Транспорт»
+        const MONOWHEELS = {
+          classic: {
+            id: 'classic',
+            title: 'Классика',
+            trailLabel: 'Желтый шлейф',
+            cost: 0,
+            trailColor: '#ffb800',
+            secondaryTrailColor: '#fde047',
+            wheelWidth: 16,
+            speedMultiplier: 1.0,
+            tiltGrowthMultiplier: 1.0,
+            laneLerpMultiplier: 1.0,
+            hitboxMultiplier: 1.0,
+          },
+          speedster: {
+            id: 'speedster',
+            title: 'Спидстер',
+            trailLabel: 'Синий шлейф · Скорость +15%',
+            cost: 200,
+            trailColor: '#00f0ff',
+            secondaryTrailColor: '#38bdf8',
+            wheelWidth: 13,
+            speedMultiplier: 1.15,
+            tiltGrowthMultiplier: 1.0,
+            laneLerpMultiplier: 1.08,
+            hitboxMultiplier: 0.95,
+          },
+          heavy_duty: {
+            id: 'heavy_duty',
+            title: 'Тяжеловес',
+            trailLabel: 'Оранжевый шлейф · Крен -20%',
+            cost: 600,
+            trailColor: '#ff6b00',
+            secondaryTrailColor: '#fb923c',
+            wheelWidth: 24,
+            speedMultiplier: 1.0,
+            tiltGrowthMultiplier: 0.8,
+            laneLerpMultiplier: 0.72,
+            hitboxMultiplier: 1.05,
+          },
+          phantom: {
+            id: 'phantom',
+            title: 'Призрак',
+            trailLabel: 'Фиолетовый шлейф · Хитбокс -32%',
+            cost: 1500,
+            trailColor: '#a855f7',
+            secondaryTrailColor: '#e879f9',
+            wheelWidth: 12,
+            speedMultiplier: 1.05,
+            tiltGrowthMultiplier: 0.95,
+            laneLerpMultiplier: 1.12,
+            hitboxMultiplier: 0.68,
+          },
+        };
 
         const ORDERS = {
           pizza: {
             id: 'pizza',
             title: 'Коробка с пиццей',
             shortTitle: 'Пицца',
-            difficulty: 'Легкий',
-            basePay: 100,
             swipeImpulse: 35,
             hasWaveSlosh: false,
           },
@@ -1887,8 +2571,6 @@
             id: 'vase',
             title: 'Хрустальная ваза',
             shortTitle: 'Ваза',
-            difficulty: 'Средний',
-            basePay: 250,
             swipeImpulse: 50,
             hasWaveSlosh: false,
           },
@@ -1896,19 +2578,105 @@
             id: 'aquarium',
             title: 'Аквариум с пираньями',
             shortTitle: 'Аквариум',
-            difficulty: 'Сложный',
-            basePay: 500,
             swipeImpulse: 38,
             hasWaveSlosh: true,
           },
         };
 
-        const UPGRADE_CONFIG = {
-          costs: [150, 350, 700],
-          gyroReduction: [0, 0.15, 0.3, 0.45], // -15% / -30% / -45% swipe impulse
-          titaniumReduction: [0, 0.2, 0.35, 0.5], // -20% / -35% / -50% damage
-          magnetLaneRange: [0, 1.15, 1.65, 2.25], // lane attraction radius
-          magnetPullSpeed: [0, 3.6, 5.5, 8.2],
+        const TRACKS = {
+          neon_city: {
+            id: 'neon_city',
+            title: 'Неоновый Сити',
+            shortTitle: 'Нео-Сити',
+            coinMultiplier: 1.0,
+            speedMultiplier: 1.0,
+            roadWidthMultiplier: 1.0,
+            spawnRateMultiplier: 1.0,
+            hasWind: false,
+            windPeakAccel: 0,
+            palette: {
+              primary: '#00f0ff',
+              secondary: '#ff2a85',
+              skyTop: '#04050c',
+              skyMid: '#0d0822',
+              skyBot: '#050711',
+              roadTop: '#090d1e',
+              roadMid: '#0c1228',
+              roadBot: '#070b18',
+              gridRgba: '255, 42, 133',
+              sunRgba1: 'rgba(255, 42, 133, 0.42)',
+              sunRgba2: 'rgba(0, 240, 255, 0.16)',
+            },
+          },
+          cyber_wasteland: {
+            id: 'cyber_wasteland',
+            title: 'Кибер-Пустошь',
+            shortTitle: 'Пустошь',
+            coinMultiplier: 1.5,
+            speedMultiplier: 1.05,
+            roadWidthMultiplier: 0.94,
+            spawnRateMultiplier: 1.12,
+            hasWind: true,
+            windPeakAccel: 44,
+            palette: {
+              primary: '#ff6b00',
+              secondary: '#ff2e4c',
+              skyTop: '#160608',
+              skyMid: '#2e0d0a',
+              skyBot: '#120506',
+              roadTop: '#24100d',
+              roadMid: '#2d140f',
+              roadBot: '#140807',
+              gridRgba: '255, 107, 0',
+              sunRgba1: 'rgba(255, 107, 0, 0.48)',
+              sunRgba2: 'rgba(255, 46, 76, 0.22)',
+            },
+          },
+          sky_bridge: {
+            id: 'sky_bridge',
+            title: 'Скай-Бридж',
+            shortTitle: 'Скай-Бридж',
+            coinMultiplier: 2.0,
+            speedMultiplier: 1.3,
+            roadWidthMultiplier: 0.74,
+            spawnRateMultiplier: 1.35,
+            hasWind: false,
+            windPeakAccel: 0,
+            palette: {
+              primary: '#e0f2fe',
+              secondary: '#38bdf8',
+              skyTop: '#020b18',
+              skyMid: '#08203e',
+              skyBot: '#041022',
+              roadTop: '#0c2340',
+              roadMid: '#102d52',
+              roadBot: '#07162c',
+              gridRgba: '56, 189, 248',
+              sunRgba1: 'rgba(224, 242, 254, 0.42)',
+              sunRgba2: 'rgba(56, 189, 248, 0.22)',
+            },
+          },
+        };
+
+        // 4 ветки навыков по 7 уровней каждая (экспоненциальная прогрессия цен)
+        const UPGRADE_TREES = {
+          stabilizer: {
+            costs: UPGRADE_COSTS,
+            reduction: [0, 0.08, 0.16, 0.24, 0.32, 0.4, 0.48, 0.56],
+          },
+          armor: {
+            costs: UPGRADE_COSTS,
+            reduction: [0, 0.1, 0.18, 0.26, 0.34, 0.42, 0.5, 0.6],
+          },
+          magnet: {
+            costs: UPGRADE_COSTS,
+            laneRange: [0, 0.85, 1.15, 1.45, 1.75, 2.05, 2.35, 2.65],
+            pullSpeed: [0, 3.0, 4.0, 5.1, 6.3, 7.5, 8.8, 10.2],
+          },
+          afterburner: {
+            costs: UPGRADE_COSTS,
+            recoveryBonus: [0, 0.15, 0.3, 0.45, 0.65, 0.85, 1.1, 1.4],
+          },
         };
 
         const CONFIG = {
@@ -1925,67 +2693,182 @@
           LANE_LERP_SPEED: 13.5,
         };
 
-        let profile = {
-          wallet: 150,
-          muted: false,
-          upgrades: {
-            gyro: 0,
-            titanium: 0,
-            magnet: 0,
-          },
-        };
+        let profilesMap = {};
+        let activeCourier = 'Alex';
+        let activeGarageTab = 'upgrades'; // 'upgrades' | 'wheels'
 
-        function loadProfile() {
-          try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              if (typeof parsed.wallet === 'number' && !Number.isNaN(parsed.wallet)) {
-                profile.wallet = Math.max(0, Math.floor(parsed.wallet));
-              }
-              if (typeof parsed.muted === 'boolean') {
-                profile.muted = parsed.muted;
-                sound.muted = parsed.muted;
-              }
-              if (parsed.upgrades && typeof parsed.upgrades === 'object') {
-                profile.upgrades.gyro = Math.max(
-                  0,
-                  Math.min(3, Number(parsed.upgrades.gyro) || 0)
-                );
-                profile.upgrades.titanium = Math.max(
-                  0,
-                  Math.min(3, Number(parsed.upgrades.titanium) || 0)
-                );
-                profile.upgrades.magnet = Math.max(
-                  0,
-                  Math.min(3, Number(parsed.upgrades.magnet) || 0)
-                );
-              }
-            } else {
-              saveProfile();
-            }
-          } catch (e) {
-            // Ignore storage errors in restricted environments
-          }
+        function createDefaultCourierProfile(initialCoins = 0) {
+          return {
+            coins: Math.max(0, Math.floor(initialCoins)),
+            upgrades: {
+              stabilizer: 0,
+              armor: 0,
+              magnet: 0,
+              afterburner: 0,
+            },
+            ownedWheels: ['classic'],
+            equippedWheel: 'classic',
+          };
         }
 
-        function saveProfile() {
+        function sanitizeProfileRecord(rec) {
+          const obj = rec && typeof rec === 'object' ? rec : {};
+          const coins =
+            typeof obj.coins === 'number' && !Number.isNaN(obj.coins)
+              ? Math.max(0, Math.floor(obj.coins))
+              : 0;
+          const upg =
+            obj.upgrades && typeof obj.upgrades === 'object' ? obj.upgrades : {};
+          const rawArmor =
+            typeof upg.armor === 'number' ? upg.armor : Number(upg.shocks) || 0;
+
+          const validWheelIds = ['classic', 'speedster', 'heavy_duty', 'phantom'];
+          const rawOwned = Array.isArray(obj.ownedWheels)
+            ? obj.ownedWheels
+            : ['classic'];
+          const ownedSet = new Set(['classic']);
+          rawOwned.forEach((w) => {
+            if (typeof w === 'string' && validWheelIds.includes(w)) {
+              ownedSet.add(w);
+            }
+          });
+          const ownedWheels = Array.from(ownedSet);
+          const equippedWheel =
+            typeof obj.equippedWheel === 'string' &&
+            ownedSet.has(obj.equippedWheel)
+              ? obj.equippedWheel
+              : 'classic';
+
+          return {
+            coins,
+            upgrades: {
+              stabilizer: Math.max(
+                0,
+                Math.min(MAX_UPGRADE_LEVEL, Number(upg.stabilizer) || 0)
+              ),
+              armor: Math.max(0, Math.min(MAX_UPGRADE_LEVEL, rawArmor)),
+              magnet: Math.max(
+                0,
+                Math.min(MAX_UPGRADE_LEVEL, Number(upg.magnet) || 0)
+              ),
+              afterburner: Math.max(
+                0,
+                Math.min(MAX_UPGRADE_LEVEL, Number(upg.afterburner) || 0)
+              ),
+            },
+            ownedWheels,
+            equippedWheel,
+          };
+        }
+
+        function loadProfilesFromStorage() {
           try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+            const raw = localStorage.getItem(PROFILES_STORAGE_KEY);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                const cleaned = {};
+                Object.keys(parsed).forEach((k) => {
+                  const name = k.trim();
+                  if (name) {
+                    cleaned[name] = sanitizeProfileRecord(parsed[k]);
+                  }
+                });
+                profilesMap = cleaned;
+              }
+            }
+          } catch (e) {
+            // Ignore localStorage parse errors
+          }
+
+          if (Object.keys(profilesMap).length === 0) {
+            profilesMap = {
+              Alex: {
+                coins: 260,
+                upgrades: { stabilizer: 1, armor: 0, magnet: 0, afterburner: 0 },
+                ownedWheels: ['classic'],
+                equippedWheel: 'classic',
+              },
+              Max: {
+                coins: 65,
+                upgrades: { stabilizer: 0, armor: 0, magnet: 0, afterburner: 0 },
+                ownedWheels: ['classic'],
+                equippedWheel: 'classic',
+              },
+            };
+          }
+
+          try {
+            const savedActive = localStorage.getItem(ACTIVE_PROFILE_KEY);
+            if (savedActive && profilesMap[savedActive]) {
+              activeCourier = savedActive;
+            } else {
+              activeCourier = Object.keys(profilesMap)[0];
+            }
+
+            const rawSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+            if (rawSettings) {
+              const parsedSettings = JSON.parse(rawSettings);
+              if (typeof parsedSettings.muted === 'boolean') {
+                sound.muted = parsedSettings.muted;
+              }
+            }
           } catch (e) {
             // Ignore storage errors
           }
-          syncGarageAndWalletUI();
+
+          saveProfilesToStorage();
+        }
+
+        function saveProfilesToStorage() {
+          try {
+            localStorage.setItem(PROFILES_STORAGE_KEY, JSON.stringify(profilesMap));
+            localStorage.setItem(ACTIVE_PROFILE_KEY, activeCourier);
+            localStorage.setItem(
+              SETTINGS_STORAGE_KEY,
+              JSON.stringify({ muted: sound.muted })
+            );
+          } catch (e) {
+            // Ignore storage errors
+          }
+          syncAllMenusUI();
+        }
+
+        function getActiveProfile() {
+          if (!profilesMap[activeCourier]) {
+            profilesMap[activeCourier] = createDefaultCourierProfile(0);
+          }
+          return profilesMap[activeCourier];
+        }
+
+        function getEquippedWheelConfig() {
+          const prof = getActiveProfile();
+          return MONOWHEELS[prof.equippedWheel] || MONOWHEELS.classic;
+        }
+
+        function selectOrCreateProfile(rawName) {
+          const name = String(rawName || '').trim();
+          if (!name) return false;
+          if (!profilesMap[name]) {
+            profilesMap[name] = createDefaultCourierProfile(0);
+          }
+          activeCourier = name;
+          saveProfilesToStorage();
+          return true;
         }
 
         function getEffectiveSwipeImpulse(orderId) {
           const order = ORDERS[orderId] || ORDERS.pizza;
-          const red = UPGRADE_CONFIG.gyroReduction[profile.upgrades.gyro] || 0;
-          return order.swipeImpulse * (1 - red);
+          const prof = getActiveProfile();
+          const wheel = getEquippedWheelConfig();
+          const red =
+            UPGRADE_TREES.stabilizer.reduction[prof.upgrades.stabilizer] || 0;
+          return order.swipeImpulse * (1 - red) * wheel.tiltGrowthMultiplier;
         }
 
         function getEffectiveDamage(baseDmg) {
-          const red = UPGRADE_CONFIG.titaniumReduction[profile.upgrades.titanium] || 0;
+          const prof = getActiveProfile();
+          const red = UPGRADE_TREES.armor.reduction[prof.upgrades.armor] || 0;
           return Math.round(baseDmg * (1 - red));
         }
 
@@ -1997,45 +2880,72 @@
         const viewportEl = document.getElementById('gameViewport');
         const hudTopEl = document.querySelector('.hud-top');
 
-        const titleScreen = document.getElementById('titleScreen');
-        const orderSelectScreen = document.getElementById('orderSelectScreen');
+        const authScreen = document.getElementById('authScreen');
+        const trackSelectScreen = document.getElementById('trackSelectScreen');
         const garageScreen = document.getElementById('garageScreen');
         const pauseScreen = document.getElementById('pauseScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
 
-        const titleWalletAmount = document.getElementById('titleWalletAmount');
-        const ordersWalletAmount = document.getElementById('ordersWalletAmount');
+        const authForm = document.getElementById('authForm');
+        const profileNameInput = document.getElementById('profileNameInput');
+        const authErrorMsg = document.getElementById('authErrorMsg');
+        const profilesListEl = document.getElementById('profilesList');
+        const authProfilesCount = document.getElementById('authProfilesCount');
+
+        const activeCourierName = document.getElementById('activeCourierName');
+        const garageCourierName = document.getElementById('garageCourierName');
+        const resultCourierName = document.getElementById('resultCourierName');
+        const tracksWheelKicker = document.getElementById('tracksWheelKicker');
+        const garageEquippedKicker = document.getElementById('garageEquippedKicker');
+
+        const tracksWalletAmount = document.getElementById('tracksWalletAmount');
         const garageWalletAmount = document.getElementById('garageWalletAmount');
         const resultWalletAmount = document.getElementById('resultWalletAmount');
+
+        const tabGarageUpgrades = document.getElementById('tabGarageUpgrades');
+        const tabGarageWheels = document.getElementById('tabGarageWheels');
+        const garagePanelUpgrades = document.getElementById('garagePanelUpgrades');
+        const garagePanelWheels = document.getElementById('garagePanelWheels');
 
         const hudTime = document.getElementById('hudTime');
         const hudCoins = document.getElementById('hudCoins');
         const hudSpeedMode = document.getElementById('hudSpeedMode');
         const hudCargoTitle = document.getElementById('hudCargoTitle');
+        const hudTrackTitle = document.getElementById('hudTrackTitle');
         const hudHpText = document.getElementById('hudHpText');
         const hudHpFill = document.getElementById('hudHpFill');
         const hudHpGhost = document.getElementById('hudHpGhost');
         const hudDistText = document.getElementById('hudDistText');
         const hudDistFill = document.getElementById('hudDistFill');
 
-        const btnOpenOrders = document.getElementById('btnOpenOrders');
-        const btnOpenGarage = document.getElementById('btnOpenGarage');
-        const btnBackFromOrders = document.getElementById('btnBackFromOrders');
-        const btnOrdersToGarage = document.getElementById('btnOrdersToGarage');
-        const btnBackFromGarage = document.getElementById('btnBackFromGarage');
-        const btnGarageToOrders = document.getElementById('btnGarageToOrders');
+        const btnSwitchProfile = document.getElementById('btnSwitchProfile');
+        const btnOpenGarageFromTracks = document.getElementById(
+          'btnOpenGarageFromTracks'
+        );
+        const btnGarageToAuth = document.getElementById('btnGarageToAuth');
+        const btnGarageToTracks = document.getElementById('btnGarageToTracks');
 
-        const btnOrderPizza = document.getElementById('btnOrderPizza');
-        const btnOrderVase = document.getElementById('btnOrderVase');
-        const btnOrderAquarium = document.getElementById('btnOrderAquarium');
+        const btnCargoPizza = document.getElementById('btnCargoPizza');
+        const btnCargoVase = document.getElementById('btnCargoVase');
+        const btnCargoAquarium = document.getElementById('btnCargoAquarium');
 
-        const btnBuyGyro = document.getElementById('btnBuyGyro');
-        const btnBuyTitanium = document.getElementById('btnBuyTitanium');
+        const btnTrackNeonCity = document.getElementById('btnTrackNeonCity');
+        const btnTrackWasteland = document.getElementById('btnTrackWasteland');
+        const btnTrackSkyBridge = document.getElementById('btnTrackSkyBridge');
+
+        const btnBuyStabilizer = document.getElementById('btnBuyStabilizer');
+        const btnBuyArmor = document.getElementById('btnBuyArmor');
         const btnBuyMagnet = document.getElementById('btnBuyMagnet');
+        const btnBuyAfterburner = document.getElementById('btnBuyAfterburner');
+
+        const btnWheelClassic = document.getElementById('btnWheelClassic');
+        const btnWheelSpeedster = document.getElementById('btnWheelSpeedster');
+        const btnWheelHeavyDuty = document.getElementById('btnWheelHeavyDuty');
+        const btnWheelPhantom = document.getElementById('btnWheelPhantom');
 
         const btnResumeShift = document.getElementById('btnResumeShift');
         const btnRestartFromPause = document.getElementById('btnRestartFromPause');
-        const btnExitToTitle = document.getElementById('btnExitToTitle');
+        const btnExitToTracks = document.getElementById('btnExitToTracks');
         const btnPlayAgain = document.getElementById('btnPlayAgain');
         const btnResultToGarage = document.getElementById('btnResultToGarage');
         const btnPause = document.getElementById('btnPause');
@@ -2076,26 +2986,110 @@
           );
         }
 
-        function syncGarageAndWalletUI() {
-          const formatted = profile.wallet + ' М';
-          titleWalletAmount.textContent = formatted;
-          ordersWalletAmount.textContent = formatted;
+        function setGarageTab(tabName) {
+          activeGarageTab = tabName === 'wheels' ? 'wheels' : 'upgrades';
+          const isUpgrades = activeGarageTab === 'upgrades';
+          tabGarageUpgrades.classList.toggle('active', isUpgrades);
+          tabGarageUpgrades.setAttribute('aria-selected', String(isUpgrades));
+          tabGarageWheels.classList.toggle('active', !isUpgrades);
+          tabGarageWheels.setAttribute('aria-selected', String(!isUpgrades));
+          garagePanelUpgrades.classList.toggle('hidden', !isUpgrades);
+          garagePanelWheels.classList.toggle('hidden', isUpgrades);
+        }
+
+        function renderSavedProfilesList() {
+          const names = Object.keys(profilesMap);
+          authProfilesCount.textContent = 'Профилей: ' + names.length;
+          profilesListEl.innerHTML = '';
+
+          names.forEach((name) => {
+            const data = profilesMap[name];
+            const totalLevels =
+              (data.upgrades.stabilizer || 0) +
+              (data.upgrades.armor || 0) +
+              (data.upgrades.magnet || 0) +
+              (data.upgrades.afterburner || 0);
+            const wheelCfg = MONOWHEELS[data.equippedWheel] || MONOWHEELS.classic;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'profile-item-btn';
+            btn.setAttribute('role', 'listitem');
+            btn.setAttribute('aria-label', 'Выбрать профиль ' + name);
+
+            const leftDiv = document.createElement('div');
+            leftDiv.className = 'profile-item-left';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'profile-item-name';
+            nameSpan.textContent =
+              name + (name === activeCourier ? ' · [Активен]' : '');
+
+            const metaSpan = document.createElement('span');
+            metaSpan.className = 'profile-item-meta';
+            metaSpan.textContent =
+              'Колесо: ' +
+              wheelCfg.title +
+              ' · Навыки: ' +
+              totalLevels +
+              '/28 ур.';
+
+            leftDiv.appendChild(nameSpan);
+            leftDiv.appendChild(metaSpan);
+
+            const coinsSpan = document.createElement('span');
+            coinsSpan.className = 'profile-item-coins';
+            coinsSpan.textContent = data.coins + ' М';
+
+            btn.appendChild(leftDiv);
+            btn.appendChild(coinsSpan);
+
+            btn.addEventListener('click', function () {
+              sound.init();
+              authErrorMsg.textContent = '';
+              selectOrCreateProfile(name);
+              setBodyState('tracks');
+            });
+
+            bindTouchPulse(btn);
+            profilesListEl.appendChild(btn);
+          });
+        }
+
+        function syncAllMenusUI() {
+          const prof = getActiveProfile();
+          const wheel = getEquippedWheelConfig();
+          const formatted = prof.coins + ' М';
+
+          activeCourierName.textContent = activeCourier;
+          garageCourierName.textContent = 'Курьер: ' + activeCourier;
+          resultCourierName.textContent = 'Курьер: ' + activeCourier;
+
+          tracksWheelKicker.textContent =
+            'Колесо: «' + wheel.title + '» · Выбери маршрут';
+          garageEquippedKicker.textContent =
+            'Экипировано: «' + wheel.title + '» (' + wheel.trailLabel + ')';
+
+          tracksWalletAmount.textContent = formatted;
           garageWalletAmount.textContent = formatted;
           resultWalletAmount.textContent = formatted;
-          syncMuteButtonUI();
 
-          const tracks = [
+          syncMuteButtonUI();
+          renderSavedProfilesList();
+
+          // Sync 4 Upgrade Branches (7 levels each)
+          const branches = [
             {
-              key: 'gyro',
-              pipsEl: document.getElementById('pipsGyro'),
-              lvlTextEl: document.getElementById('lvlTextGyro'),
-              btnEl: btnBuyGyro,
+              key: 'stabilizer',
+              pipsEl: document.getElementById('pipsStabilizer'),
+              lvlTextEl: document.getElementById('lvlTextStabilizer'),
+              btnEl: btnBuyStabilizer,
             },
             {
-              key: 'titanium',
-              pipsEl: document.getElementById('pipsTitanium'),
-              lvlTextEl: document.getElementById('lvlTextTitanium'),
-              btnEl: btnBuyTitanium,
+              key: 'armor',
+              pipsEl: document.getElementById('pipsArmor'),
+              lvlTextEl: document.getElementById('lvlTextArmor'),
+              btnEl: btnBuyArmor,
             },
             {
               key: 'magnet',
@@ -2103,37 +3097,115 @@
               lvlTextEl: document.getElementById('lvlTextMagnet'),
               btnEl: btnBuyMagnet,
             },
+            {
+              key: 'afterburner',
+              pipsEl: document.getElementById('pipsAfterburner'),
+              lvlTextEl: document.getElementById('lvlTextAfterburner'),
+              btnEl: btnBuyAfterburner,
+            },
           ];
 
-          tracks.forEach((t) => {
-            const lvl = profile.upgrades[t.key] || 0;
-            const pips = t.pipsEl.querySelectorAll('.level-pip');
+          branches.forEach((b) => {
+            const lvl = prof.upgrades[b.key] || 0;
+            const pips = b.pipsEl.querySelectorAll('.level-pip');
             pips.forEach((pip, idx) => {
               pip.classList.toggle('filled', idx < lvl);
             });
-            t.lvlTextEl.textContent = lvl + '/3';
+            b.lvlTextEl.textContent = 'Ур. ' + lvl + '/' + MAX_UPGRADE_LEVEL;
 
-            if (lvl >= 3) {
-              t.btnEl.textContent = 'МАКС.';
-              t.btnEl.disabled = true;
+            if (lvl >= MAX_UPGRADE_LEVEL) {
+              b.btnEl.textContent = 'МАКС. 7/7';
+              b.btnEl.disabled = true;
             } else {
-              const cost = UPGRADE_CONFIG.costs[lvl];
-              t.btnEl.textContent = 'Купить · ' + cost + ' М';
-              t.btnEl.disabled = profile.wallet < cost;
+              const cost = UPGRADE_TREES[b.key].costs[lvl];
+              b.btnEl.textContent = 'Ур.' + (lvl + 1) + ' · ' + cost + ' М';
+              b.btnEl.disabled = prof.coins < cost;
+            }
+          });
+
+          // Sync 4 Monowheels in Transport Shop
+          const wheelItems = [
+            {
+              id: 'classic',
+              cardEl: document.getElementById('wheelCardClassic'),
+              btnEl: btnWheelClassic,
+            },
+            {
+              id: 'speedster',
+              cardEl: document.getElementById('wheelCardSpeedster'),
+              btnEl: btnWheelSpeedster,
+            },
+            {
+              id: 'heavy_duty',
+              cardEl: document.getElementById('wheelCardHeavyDuty'),
+              btnEl: btnWheelHeavyDuty,
+            },
+            {
+              id: 'phantom',
+              cardEl: document.getElementById('wheelCardPhantom'),
+              btnEl: btnWheelPhantom,
+            },
+          ];
+
+          wheelItems.forEach((item) => {
+            const cfg = MONOWHEELS[item.id];
+            const isOwned = prof.ownedWheels.includes(item.id);
+            const isEquipped = prof.equippedWheel === item.id;
+
+            item.cardEl.classList.toggle('equipped', isEquipped);
+            item.btnEl.classList.remove('state-equip', 'state-equipped');
+
+            if (isEquipped) {
+              item.btnEl.textContent = 'Экипировано';
+              item.btnEl.classList.add('state-equipped');
+              item.btnEl.disabled = false;
+            } else if (isOwned) {
+              item.btnEl.textContent = 'Экипировать';
+              item.btnEl.classList.add('state-equip');
+              item.btnEl.disabled = false;
+            } else {
+              item.btnEl.textContent = 'Купить · ' + cfg.cost + ' М';
+              item.btnEl.disabled = prof.coins < cfg.cost;
             }
           });
         }
 
         function purchaseUpgrade(key) {
-          const lvl = profile.upgrades[key] || 0;
-          if (lvl >= 3) return;
-          const cost = UPGRADE_CONFIG.costs[lvl];
-          if (profile.wallet < cost) return;
+          const prof = getActiveProfile();
+          const lvl = prof.upgrades[key] || 0;
+          if (lvl >= MAX_UPGRADE_LEVEL) return;
+          const cost = UPGRADE_TREES[key].costs[lvl];
+          if (prof.coins < cost) return;
 
-          profile.wallet -= cost;
-          profile.upgrades[key] = lvl + 1;
+          prof.coins -= cost;
+          prof.upgrades[key] = lvl + 1;
           sound.upgrade();
-          saveProfile();
+          triggerHaptic([12, 20, 16]);
+          saveProfilesToStorage();
+        }
+
+        function handleWheelAction(wheelId) {
+          const cfg = MONOWHEELS[wheelId];
+          if (!cfg) return;
+          const prof = getActiveProfile();
+
+          if (prof.ownedWheels.includes(wheelId)) {
+            if (prof.equippedWheel !== wheelId) {
+              prof.equippedWheel = wheelId;
+              sound.equip();
+              triggerHaptic(14);
+              saveProfilesToStorage();
+            }
+            return;
+          }
+
+          if (prof.coins < cfg.cost) return;
+          prof.coins -= cfg.cost;
+          prof.ownedWheels.push(wheelId);
+          prof.equippedWheel = wheelId;
+          sound.upgrade();
+          triggerHaptic([16, 24, 18]);
+          saveProfilesToStorage();
         }
 
         // ============================================================================
@@ -2181,7 +3253,6 @@
           p.gravity = gravity;
         }
 
-        // Разлет неоновых искр при столкновении или сборе монеты
         function spawnNeonSparks(x, y, count, palette, minSpd = 90, maxSpd = 260) {
           for (let i = 0; i < count; i++) {
             const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.45;
@@ -2201,7 +3272,6 @@
           }
         }
 
-        // Линии скорости (speed lines) по краям экрана при ускорении (Boost)
         const SPEED_LINE_COUNT = 28;
         const speedLines = Array.from({ length: SPEED_LINE_COUNT }, (_, idx) => ({
           side: idx % 2 === 0 ? -1 : 1,
@@ -2231,8 +3301,9 @@
         // 5. GAME STATE & CORE ENTITIES
         // ============================================================================
         const state = {
-          mode: 'title', // 'title' | 'orders' | 'garage' | 'playing' | 'paused' | 'gameover'
+          mode: 'auth', // 'auth' | 'tracks' | 'garage' | 'playing' | 'paused' | 'gameover'
           selectedOrder: 'pizza', // 'pizza' | 'vase' | 'aquarium'
+          selectedTrack: 'neon_city', // 'neon_city' | 'cyber_wasteland' | 'sky_bridge'
           distance: 0,
           timeLeft: CONFIG.TIME_LIMIT,
           hp: CONFIG.INITIAL_HP,
@@ -2241,11 +3312,12 @@
           visualLane: 1,
           speedMode: 'normal',
           speedTimer: 0,
-          boostVisual: 0, // 0..1 smooth intensity for speed lines
+          boostVisual: 0,
           currentSpeed: CONFIG.BASE_SPEED,
           tilt: 0,
           tiltVelocity: 0,
-          waveTimer: 0, // 3-second sinusoidal slosh timer for aquarium
+          currentWindAccel: 0,
+          waveTimer: 0,
           wavePhase: 0,
           dangerBeepTimer: 0,
           dangerPopupTimer: 0,
@@ -2258,7 +3330,7 @@
           hitstopTimer: 0,
           invulnTimer: 0,
           spawnTimer: 0.7,
-          coinSpawnTimer: 0.45,
+          coinSpawnTimer: 1.4,
           elapsedTime: 0,
           obstacles: [],
           pickups: [],
@@ -2268,20 +3340,37 @@
         function setBodyState(nextMode) {
           state.mode = nextMode;
           document.body.dataset.state = nextMode;
-          titleScreen.classList.toggle('hidden', nextMode !== 'title');
-          orderSelectScreen.classList.toggle('hidden', nextMode !== 'orders');
+          authScreen.classList.toggle('hidden', nextMode !== 'auth');
+          trackSelectScreen.classList.toggle('hidden', nextMode !== 'tracks');
           garageScreen.classList.toggle('hidden', nextMode !== 'garage');
           pauseScreen.classList.toggle('hidden', nextMode !== 'paused');
           gameOverScreen.classList.toggle('hidden', nextMode !== 'gameover');
-          syncGarageAndWalletUI();
+          syncAllMenusUI();
         }
 
-        function resetGame(orderId) {
+        function setSelectedCargo(cargoId) {
+          if (!ORDERS[cargoId]) return;
+          state.selectedOrder = cargoId;
+          [btnCargoPizza, btnCargoVase, btnCargoAquarium].forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.cargo === cargoId);
+          });
+        }
+
+        function resetGame(trackId, orderId) {
+          if (trackId && TRACKS[trackId]) {
+            state.selectedTrack = trackId;
+          }
           if (orderId && ORDERS[orderId]) {
             state.selectedOrder = orderId;
           }
           const order = ORDERS[state.selectedOrder];
-          hudCargoTitle.textContent = order.shortTitle + ' · HP';
+          const track = TRACKS[state.selectedTrack];
+          const wheel = getEquippedWheelConfig();
+
+          hudCargoTitle.textContent =
+            order.shortTitle + ' · ' + wheel.title;
+          hudTrackTitle.textContent =
+            track.shortTitle + ' (x' + track.coinMultiplier + ')';
 
           state.distance = 0;
           state.timeLeft = CONFIG.TIME_LIMIT;
@@ -2292,9 +3381,11 @@
           state.speedMode = 'normal';
           state.speedTimer = 0;
           state.boostVisual = 0;
-          state.currentSpeed = CONFIG.BASE_SPEED;
+          state.currentSpeed =
+            CONFIG.BASE_SPEED * track.speedMultiplier * wheel.speedMultiplier;
           state.tilt = 0;
           state.tiltVelocity = 0;
+          state.currentWindAccel = 0;
           state.waveTimer = 0;
           state.wavePhase = 0;
           state.dangerBeepTimer = 0;
@@ -2305,30 +3396,28 @@
           state.flashAlpha = 0;
           state.hitstopTimer = 0;
           state.invulnTimer = 0;
-          state.spawnTimer = 1.1;
-          state.coinSpawnTimer = 0.5;
+          state.spawnTimer = 1.0 / track.spawnRateMultiplier;
+          state.coinSpawnTimer = 2.4;
           state.elapsedTime = 0;
           state.obstacles.length = 0;
           state.pickups.length = 0;
           floatingTexts.length = 0;
           state.endSnapshot = null;
 
-          // Seed welcoming coins ahead on the open center lane
-          for (let i = 0; i < 3; i++) {
-            state.pickups.push({
-              lane: 1,
-              visualLane: 1,
-              y: ch * 0.42 - i * 68,
-              radius: 14,
-              spin: i * 0.8,
-              magnetized: false,
-            });
-          }
+          // Seed 1 welcoming coin ahead on the center lane (scarce economy: 1 coin = 1 point)
+          state.pickups.push({
+            lane: 1,
+            visualLane: 1,
+            y: ch * 0.42,
+            radius: 14,
+            spin: 0,
+            magnetized: false,
+          });
 
           updateHudDom(true);
         }
 
-        function startShiftWithOrder(orderId) {
+        function startShiftWithTrack(trackId) {
           if (
             document.activeElement &&
             typeof document.activeElement.blur === 'function'
@@ -2336,7 +3425,7 @@
             document.activeElement.blur();
           }
           sound.init();
-          resetGame(orderId || state.selectedOrder);
+          resetGame(trackId || state.selectedTrack, state.selectedOrder);
           setBodyState('playing');
         }
 
@@ -2360,16 +3449,23 @@
           state.tilt += inertiaDelta;
           state.tiltVelocity += inertiaDelta * 0.45;
 
-          // Activate 3-second sinusoidal water slosh if carrying Piranha Aquarium
           if (ORDERS[state.selectedOrder].hasWaveSlosh) {
             state.waveTimer = 3.0;
           }
 
           const px = getLaneX(state.visualLane, getPlayerY());
+          const wheel = getEquippedWheelConfig();
           if (caughtBalance) {
             state.tiltVelocity *= 0.35;
             addFloatingText('БАЛАНС ПОЙМАН!', px, getPlayerY() - 94, '#00ff9d', 1.05);
-            spawnNeonSparks(px, getPlayerY() - 48, 8, ['#00ff9d', '#00f0ff'], 60, 140);
+            spawnNeonSparks(
+              px,
+              getPlayerY() - 48,
+              8,
+              ['#00ff9d', wheel.trailColor],
+              60,
+              140
+            );
           } else if (prevLane !== state.lane) {
             for (let i = 0; i < 10; i++) {
               spawnParticle(
@@ -2378,7 +3474,7 @@
                 -direction * (50 + Math.random() * 95),
                 20 + Math.random() * 65,
                 2.5 + Math.random() * 2,
-                '#00f0ff',
+                i % 2 === 0 ? wheel.trailColor : wheel.secondaryTrailColor,
                 2.2,
                 true,
                 80
@@ -2393,13 +3489,21 @@
         function triggerVerticalSwipe(verticalDir) {
           if (state.mode !== 'playing') return;
           const px = getLaneX(state.visualLane, getPlayerY());
+          const wheel = getEquippedWheelConfig();
           if (verticalDir === 1) {
             state.speedMode = 'boost';
             state.speedTimer = 3.4;
             sound.boost();
             triggerHaptic([16, 20, 24]);
             addFloatingText('УСКОРЕНИЕ!', px, getPlayerY() - 88, '#ff2a85', 1.25);
-            spawnNeonSparks(px, getPlayerY() + 16, 12, ['#ff2a85', '#00f0ff'], 80, 190);
+            spawnNeonSparks(
+              px,
+              getPlayerY() + 16,
+              12,
+              ['#ff2a85', wheel.trailColor],
+              80,
+              190
+            );
           } else if (verticalDir === -1) {
             if (state.speedMode === 'boost') {
               state.speedMode = 'normal';
@@ -2433,7 +3537,6 @@
           }
         }
 
-        // Touch & Pointer Swipe Recognition on Canvas
         let pointerStartX = null;
         let pointerStartY = null;
         let pointerStartTime = 0;
@@ -2514,34 +3617,32 @@
         window.addEventListener('keydown', function (e) {
           if (e.repeat) return;
 
+          if (
+            document.activeElement &&
+            document.activeElement.tagName === 'INPUT'
+          ) {
+            return;
+          }
+
           if (e.code === 'KeyM') {
             e.preventDefault();
             handleMuteToggle();
             return;
           }
 
-          if (state.mode === 'title') {
-            if (e.code === 'Enter' || e.code === 'Space') {
-              e.preventDefault();
-              sound.init();
-              setBodyState('orders');
-            }
-            return;
-          }
-
-          if (state.mode === 'orders') {
+          if (state.mode === 'tracks') {
             if (e.code === 'Digit1' || e.code === 'Enter' || e.code === 'Space') {
               e.preventDefault();
-              startShiftWithOrder('pizza');
+              startShiftWithTrack('neon_city');
             } else if (e.code === 'Digit2') {
               e.preventDefault();
-              startShiftWithOrder('vase');
+              startShiftWithTrack('cyber_wasteland');
             } else if (e.code === 'Digit3') {
               e.preventDefault();
-              startShiftWithOrder('aquarium');
+              startShiftWithTrack('sky_bridge');
             } else if (e.code === 'Escape') {
               e.preventDefault();
-              setBodyState('title');
+              setBodyState('auth');
             }
             return;
           }
@@ -2549,7 +3650,7 @@
           if (state.mode === 'garage') {
             if (e.code === 'Escape') {
               e.preventDefault();
-              setBodyState('title');
+              setBodyState('tracks');
             }
             return;
           }
@@ -2557,14 +3658,16 @@
           if (state.mode === 'gameover') {
             if (e.code === 'Enter' || e.code === 'Space') {
               e.preventDefault();
-              setBodyState('orders');
+              setBodyState('tracks');
             }
             return;
           }
 
           if (e.code === 'Escape' || e.code === 'KeyP') {
-            e.preventDefault();
-            togglePause();
+            if (state.mode === 'playing' || state.mode === 'paused') {
+              e.preventDefault();
+              togglePause();
+            }
             return;
           }
 
@@ -2588,51 +3691,98 @@
           }
         });
 
-        // Menu Navigation & Order / Upgrade Button Handlers
-        btnOpenOrders.addEventListener('click', function () {
+        // Auth Form & Menu Navigation Handlers
+        authForm.addEventListener('submit', function (e) {
+          e.preventDefault();
           sound.init();
-          setBodyState('orders');
+          const entered = profileNameInput.value.trim();
+          if (!entered) {
+            authErrorMsg.textContent =
+              'Введите позывной курьера или выберите профиль из списка ниже.';
+            profileNameInput.focus();
+            return;
+          }
+          authErrorMsg.textContent = '';
+          selectOrCreateProfile(entered);
+          profileNameInput.value = '';
+          setBodyState('tracks');
         });
-        btnOpenGarage.addEventListener('click', function () {
+
+        btnSwitchProfile.addEventListener('click', function () {
+          authErrorMsg.textContent = '';
+          setBodyState('auth');
+        });
+
+        btnOpenGarageFromTracks.addEventListener('click', function () {
           sound.init();
           setBodyState('garage');
         });
-        btnBackFromOrders.addEventListener('click', function () {
-          setBodyState('title');
-        });
-        btnOrdersToGarage.addEventListener('click', function () {
-          setBodyState('garage');
-        });
-        btnBackFromGarage.addEventListener('click', function () {
-          setBodyState('title');
-        });
-        btnGarageToOrders.addEventListener('click', function () {
-          setBodyState('orders');
+
+        btnGarageToAuth.addEventListener('click', function () {
+          setBodyState('auth');
         });
 
-        btnOrderPizza.addEventListener('click', function () {
-          startShiftWithOrder('pizza');
-        });
-        btnOrderVase.addEventListener('click', function () {
-          startShiftWithOrder('vase');
-        });
-        btnOrderAquarium.addEventListener('click', function () {
-          startShiftWithOrder('aquarium');
+        btnGarageToTracks.addEventListener('click', function () {
+          setBodyState('tracks');
         });
 
-        btnBuyGyro.addEventListener('click', function () {
-          purchaseUpgrade('gyro');
+        tabGarageUpgrades.addEventListener('click', function () {
+          setGarageTab('upgrades');
         });
-        btnBuyTitanium.addEventListener('click', function () {
-          purchaseUpgrade('titanium');
+
+        tabGarageWheels.addEventListener('click', function () {
+          setGarageTab('wheels');
+        });
+
+        btnCargoPizza.addEventListener('click', function () {
+          setSelectedCargo('pizza');
+        });
+        btnCargoVase.addEventListener('click', function () {
+          setSelectedCargo('vase');
+        });
+        btnCargoAquarium.addEventListener('click', function () {
+          setSelectedCargo('aquarium');
+        });
+
+        btnTrackNeonCity.addEventListener('click', function () {
+          startShiftWithTrack('neon_city');
+        });
+        btnTrackWasteland.addEventListener('click', function () {
+          startShiftWithTrack('cyber_wasteland');
+        });
+        btnTrackSkyBridge.addEventListener('click', function () {
+          startShiftWithTrack('sky_bridge');
+        });
+
+        btnBuyStabilizer.addEventListener('click', function () {
+          purchaseUpgrade('stabilizer');
+        });
+        btnBuyArmor.addEventListener('click', function () {
+          purchaseUpgrade('armor');
         });
         btnBuyMagnet.addEventListener('click', function () {
           purchaseUpgrade('magnet');
         });
+        btnBuyAfterburner.addEventListener('click', function () {
+          purchaseUpgrade('afterburner');
+        });
+
+        btnWheelClassic.addEventListener('click', function () {
+          handleWheelAction('classic');
+        });
+        btnWheelSpeedster.addEventListener('click', function () {
+          handleWheelAction('speedster');
+        });
+        btnWheelHeavyDuty.addEventListener('click', function () {
+          handleWheelAction('heavy_duty');
+        });
+        btnWheelPhantom.addEventListener('click', function () {
+          handleWheelAction('phantom');
+        });
 
         btnPlayAgain.addEventListener('click', function () {
           sound.init();
-          setBodyState('orders');
+          setBodyState('tracks');
         });
         btnResultToGarage.addEventListener('click', function () {
           sound.init();
@@ -2643,11 +3793,11 @@
           setBodyState('playing');
         });
         btnRestartFromPause.addEventListener('click', function () {
-          startShiftWithOrder(state.selectedOrder);
+          startShiftWithTrack(state.selectedTrack);
         });
-        btnExitToTitle.addEventListener('click', function () {
-          resetGame(state.selectedOrder);
-          setBodyState('title');
+        btnExitToTracks.addEventListener('click', function () {
+          resetGame(state.selectedTrack, state.selectedOrder);
+          setBodyState('tracks');
         });
 
         function togglePause() {
@@ -2659,9 +3809,8 @@
         }
 
         function handleMuteToggle() {
-          const isMuted = sound.toggleMute();
-          profile.muted = isMuted;
-          saveProfile();
+          sound.toggleMute();
+          saveProfilesToStorage();
         }
 
         btnPause.addEventListener('click', function (e) {
@@ -2692,7 +3841,7 @@
         });
 
         // ============================================================================
-        // 7. ROAD GEOMETRY & PERSPECTIVE HELPERS
+        // 7. ROAD GEOMETRY & TRACK PERSPECTIVE HELPERS
         // ============================================================================
         function getPlayerY() {
           return ch * 0.78;
@@ -2715,10 +3864,12 @@
         }
 
         function getRoadBoundsAtY(y) {
+          const track = TRACKS[state.selectedTrack] || TRACKS.neon_city;
+          const widthMul = track.roadWidthMultiplier || 1.0;
           const horizonY = getRoadHorizonY();
           const t = Math.max(0, Math.min(1.15, (y - horizonY) / (ch - horizonY)));
-          const topWidth = cw * 0.46;
-          const bottomWidth = cw * 0.88;
+          const topWidth = cw * 0.46 * widthMul;
+          const bottomWidth = cw * 0.88 * widthMul;
           const roadWidth = topWidth + (bottomWidth - topWidth) * t;
           const left = (cw - roadWidth) * 0.5;
           return {
@@ -2740,15 +3891,17 @@
         }
 
         // ============================================================================
-        // 8. OBSTACLE & BONUS SPAWNING
+        // 8. OBSTACLE & SCARCE COIN SPAWNING (Rebalanced Economy)
         // ============================================================================
         function spawnObstacleWave() {
+          const track = TRACKS[state.selectedTrack] || TRACKS.neon_city;
           const progress = Math.min(1, state.distance / CONFIG.TARGET_DISTANCE);
           const horizonY = getRoadHorizonY() - 20;
 
-          const isOpeningGrace = state.elapsedTime < 4.5;
+          const isOpeningGrace = state.elapsedTime < 4.0;
+          const doubleChance = state.selectedTrack === 'sky_bridge' ? 0.42 : 0.3;
           const doubleSpawn =
-            !isOpeningGrace && progress > 0.25 && Math.random() < 0.32;
+            !isOpeningGrace && progress > 0.22 && Math.random() < doubleChance;
           const count = doubleSpawn ? 2 : 1;
           const availableLanes = isOpeningGrace ? [0, 2] : [0, 1, 2];
 
@@ -2758,16 +3911,16 @@
 
             const roll = Math.random();
             let type = 'car';
-            let speedMul = 0.82;
+            let speedMul = 0.84 * track.speedMultiplier;
             if (roll < 0.38) {
               type = 'car';
-              speedMul = 0.95 + Math.random() * 0.25;
+              speedMul = (0.95 + Math.random() * 0.25) * track.speedMultiplier;
             } else if (roll < 0.72) {
               type = 'barrier';
-              speedMul = 0.72;
+              speedMul = 0.74 * track.speedMultiplier;
             } else {
               type = 'drone';
-              speedMul = 0.86;
+              speedMul = 0.88 * track.speedMultiplier;
             }
 
             state.obstacles.push({
@@ -2783,15 +3936,16 @@
           }
         }
 
-        function spawnCoinLine() {
+        // Монеты спавнятся реже, 1 собранная монета = 1 балл
+        function spawnScarceCoin() {
           const lane = Math.floor(Math.random() * 3);
-          const horizonY = getRoadHorizonY() - 10;
-          const count = 2 + Math.floor(Math.random() * 2);
+          const horizonY = getRoadHorizonY() - 12;
+          const count = Math.random() < 0.22 ? 2 : 1;
           for (let i = 0; i < count; i++) {
             state.pickups.push({
               lane,
               visualLane: lane,
-              y: horizonY - i * 54,
+              y: horizonY - i * 58,
               radius: 14,
               spin: i * 0.6,
               magnetized: false,
@@ -2800,7 +3954,7 @@
         }
 
         // ============================================================================
-        // 9. DAMAGE, TILT CRASH & END-OF-SHIFT HANDLERS
+        // 9. DAMAGE, TILT CRASH & REBALANCED PAYOUT HANDLERS
         // ============================================================================
         function triggerTiltCrash() {
           const dmg = getEffectiveDamage(CONFIG.TILT_DAMAGE);
@@ -2834,7 +3988,7 @@
           }
         }
 
-        function triggerObstacleCollision(obs) {
+        function triggerObstacleCollision() {
           const dmg = getEffectiveDamage(CONFIG.OBSTACLE_DAMAGE);
           state.hp = Math.max(0, state.hp - dmg);
           state.invulnTimer = 0.85;
@@ -2874,23 +4028,19 @@
         function finishShift(victory, subtitleReason) {
           if (state.mode === 'gameover') return;
 
-          const order = ORDERS[state.selectedOrder] || ORDERS.pizza;
+          const track = TRACKS[state.selectedTrack] || TRACKS.neon_city;
           const hp = Math.round(state.hp);
           const dist = Math.min(CONFIG.TARGET_DISTANCE, Math.round(state.distance));
           const timeLeft = Math.max(0, state.timeLeft);
-          const coins = state.coins;
+          const collectedCoins = Math.max(0, Math.floor(state.coins));
 
-          const basePay = victory ? order.basePay : 0;
-          const conditionTip = victory
-            ? Math.round((hp / 100) * (order.basePay * 0.6))
-            : 0;
-          const speedTip = victory ? Math.round(timeLeft * 8) : 0;
-          const coinBonus = coins * 15;
-          const total = basePay + conditionTip + speedTip + coinBonus;
+          const multiplier = track.coinMultiplier;
+          const total = Math.round(collectedCoins * multiplier);
+          const trackBonus = Math.max(0, total - collectedCoins);
 
-          // Credit total earnings to persistent wallet in localStorage
-          profile.wallet += total;
-          saveProfile();
+          const prof = getActiveProfile();
+          prof.coins += total;
+          saveProfilesToStorage();
 
           let grade = 'C';
           if (!victory) {
@@ -2908,19 +4058,17 @@
             dist,
             hp,
             grade,
-            basePay,
-            conditionTip,
-            speedTip,
-            coinBonus,
+            collectedCoins,
+            multiplier,
+            trackBonus,
             total,
           };
 
-          document.getElementById('resultKicker').textContent = victory
-            ? 'Заказ «' + order.title + '» выполнен'
-            : 'Критический сбой смены';
+          document.getElementById('resultKicker').textContent =
+            track.title + ' · Курьер ' + activeCourier;
           document.getElementById('resultHeading').textContent = victory
-            ? 'Смена выполнена!'
-            : 'Доставка сорвана';
+            ? 'Маршрут пройден!'
+            : 'Доставка прервана';
           document.getElementById('resultSubtitle').textContent = subtitleReason;
 
           document.getElementById('resDistance').textContent = dist + ' м';
@@ -2930,16 +4078,16 @@
             ? '#00ff9d'
             : '#ff3355';
 
-          document.getElementById('resOrderLabel').textContent =
-            'Тариф (' + order.shortTitle + ')';
-          document.getElementById('resBasePay').textContent = '+' + basePay + ' М';
-          document.getElementById('resConditionTip').textContent =
-            '+' + conditionTip + ' М';
-          document.getElementById('resSpeedTip').textContent = '+' + speedTip + ' М';
-          document.getElementById('resCoinBonus').textContent = '+' + coinBonus + ' М';
+          document.getElementById('resCollectedCoins').textContent =
+            collectedCoins + ' М';
+          document.getElementById('resTrackMultLabel').textContent =
+            'Бонус трассы «' + track.shortTitle + '» (x' + multiplier + ')';
+          document.getElementById('resTrackBonus').textContent =
+            '+' + trackBonus + ' М';
           document.getElementById('resTotalPay').textContent = '+' + total + ' М';
+
           btnPlayAgain.textContent = victory
-            ? 'Выбрать следующий заказ'
+            ? 'Выбрать трассу · Новый заезд'
             : 'Попробовать снова';
 
           if (victory) {
@@ -2984,7 +4132,7 @@
 
           if (force || state.coins !== lastHudCoins) {
             lastHudCoins = state.coins;
-            hudCoins.textContent = String(state.coins);
+            hudCoins.textContent = state.coins + ' М';
           }
 
           const hpInt = Math.round(state.hp);
@@ -3025,6 +4173,10 @@
           const dt = Math.min(rawDt, 0.05);
           state.elapsedTime += dt;
 
+          const track = TRACKS[state.selectedTrack] || TRACKS.neon_city;
+          const prof = getActiveProfile();
+          const wheel = getEquippedWheelConfig();
+
           if (state.flashAlpha > 0) {
             state.flashAlpha = Math.max(0, state.flashAlpha - dt * 2.2);
           }
@@ -3032,7 +4184,6 @@
             state.shakeTrauma = Math.max(0, state.shakeTrauma - dt * 2.4);
           }
 
-          // Smooth speed lines intensity ramp when in Boost
           const targetBoostVis =
             state.mode === 'playing' && state.speedMode === 'boost' ? 1 : 0;
           state.boostVisual = lerp(
@@ -3049,15 +4200,18 @@
 
           // Ambient animation in menu screens
           if (
-            state.mode === 'title' ||
-            state.mode === 'orders' ||
+            state.mode === 'auth' ||
+            state.mode === 'tracks' ||
             state.mode === 'garage'
           ) {
-            state.roadScroll = (state.roadScroll + CONFIG.BASE_SPEED * 14 * dt) % 120;
+            state.roadScroll =
+              (state.roadScroll +
+                CONFIG.BASE_SPEED * wheel.speedMultiplier * 14 * dt) %
+              120;
             state.visualLane = 1 + Math.sin(state.elapsedTime * 1.4) * 0.25;
             state.tilt = Math.sin(state.elapsedTime * 2.1) * 18;
             state.wavePhase += dt * 5;
-            spawnMonowheelTrail(dt);
+            spawnMonowheelTrail();
             updateParticles(dt);
             return;
           }
@@ -3075,7 +4229,7 @@
             state.invulnTimer = Math.max(0, state.invulnTimer - dt);
           }
 
-          // 1. Speed mode timer & velocity lerp
+          // 1. Speed mode timer & velocity lerp (scaled by Track & Equipped Monowheel speedMultiplier)
           if (state.speedTimer > 0) {
             state.speedTimer -= dt;
             if (state.speedTimer <= 0) {
@@ -3084,12 +4238,14 @@
             }
           }
 
-          const targetSpeed =
+          const rawModeSpeed =
             state.speedMode === 'boost'
               ? CONFIG.BOOST_SPEED
               : state.speedMode === 'brake'
                 ? CONFIG.BRAKE_SPEED
                 : CONFIG.BASE_SPEED;
+          const targetSpeed =
+            rawModeSpeed * track.speedMultiplier * wheel.speedMultiplier;
           state.currentSpeed = lerp(state.currentSpeed, targetSpeed, Math.min(1, dt * 8));
 
           // 2. Progress distance & timer
@@ -3097,19 +4253,20 @@
           state.timeLeft = Math.max(0, state.timeLeft - dt);
           state.roadScroll = (state.roadScroll + state.currentSpeed * 16 * dt) % 120;
 
-          // 3. Smooth lane lerp for courier
+          // 3. Smooth lane lerp for courier (Heavy Duty wheel has slower laneLerpMultiplier = 0.72)
           state.visualLane = lerp(
             state.visualLane,
             state.lane,
-            Math.min(1, dt * CONFIG.LANE_LERP_SPEED)
+            Math.min(1, dt * CONFIG.LANE_LERP_SPEED * wheel.laneLerpMultiplier)
           );
 
-          // 4. Package Balance (Tilt) Physics + Aquarium 3s Wave Slosh
+          // 4. Package Balance (Tilt) Physics + Afterburner + Heavy Duty Stability + Crosswind
           state.timeSinceLastSwipe += dt;
           const normalizedTilt = state.tilt / CONFIG.TILT_LIMIT;
           const pendulumPull =
             Math.sign(state.tilt) *
-            (Math.abs(normalizedTilt) * 28 + Math.pow(Math.abs(normalizedTilt), 2) * 42);
+            (Math.abs(normalizedTilt) * 28 + Math.pow(Math.abs(normalizedTilt), 2) * 42) *
+            wheel.tiltGrowthMultiplier;
 
           const boostFactor =
             state.speedMode === 'boost'
@@ -3118,34 +4275,64 @@
                 ? 0.65
                 : 1.0;
 
+          const afterburnerBonus =
+            1 +
+            (UPGRADE_TREES.afterburner.recoveryBonus[prof.upgrades.afterburner] ||
+              0);
+
           const stabilizing =
             state.timeSinceLastSwipe > 0.35 && Math.abs(state.tilt) < 82;
           const stabilizePull = stabilizing
-            ? -state.tilt * (state.speedMode === 'brake' ? 2.4 : 1.55)
+            ? -state.tilt *
+              (state.speedMode === 'brake' ? 2.4 : 1.55) *
+              afterburnerBonus
             : 0;
 
-          // Aquarium wave slosh: sinusoidal oscillation for 3 seconds after swiping
           let waveSloshAccel = 0;
           if (ORDERS[state.selectedOrder].hasWaveSlosh && state.waveTimer > 0) {
             state.waveTimer = Math.max(0, state.waveTimer - dt);
             state.wavePhase += dt * 7.5;
             const waveEnvelope = state.waveTimer / 3.0;
-            waveSloshAccel = Math.sin(state.wavePhase) * 95 * waveEnvelope;
+            waveSloshAccel =
+              Math.sin(state.wavePhase) *
+              95 *
+              waveEnvelope *
+              wheel.tiltGrowthMultiplier;
           } else {
             state.wavePhase += dt * 2.5;
           }
+
+          // Боковой ветер на трассе «Кибер-Пустошь»
+          let windAccel = 0;
+          if (track.hasWind) {
+            const gustWave =
+              Math.sin(state.elapsedTime * 1.35) * 0.7 +
+              Math.cos(state.elapsedTime * 0.62) * 0.3;
+            const stabRed =
+              (UPGRADE_TREES.stabilizer.reduction[prof.upgrades.stabilizer] || 0) *
+              0.65;
+            windAccel =
+              gustWave *
+              track.windPeakAccel *
+              (1 - stabRed) *
+              wheel.tiltGrowthMultiplier;
+          }
+          state.currentWindAccel = windAccel;
 
           const turbulenceSample =
             Math.sin(state.elapsedTime * 13.7) * 0.6 +
             Math.cos(state.elapsedTime * 21.3) * 0.4;
           const wobbleAccel =
-            turbulenceSample * (state.speedMode === 'boost' ? 38 : 8);
+            turbulenceSample *
+            (state.speedMode === 'boost' ? 38 : 8) *
+            wheel.tiltGrowthMultiplier;
 
           const totalTiltAccel =
             pendulumPull * boostFactor +
             stabilizePull +
             wobbleAccel +
-            waveSloshAccel;
+            waveSloshAccel +
+            windAccel;
           state.tiltVelocity += totalTiltAccel * dt;
           state.tiltVelocity *= Math.pow(0.18, dt);
           state.tilt += state.tiltVelocity * dt;
@@ -3153,6 +4340,7 @@
           if (
             stabilizing &&
             state.waveTimer <= 0 &&
+            Math.abs(windAccel) < 4 &&
             Math.abs(state.tilt) < 1.0 &&
             Math.abs(state.tiltVelocity) < 4
           ) {
@@ -3160,7 +4348,7 @@
             state.tiltVelocity = 0;
           }
 
-          // Тревожная красная зона баланса (> 75 или < -75): прерывистый писк + «ОПАСНЫЙ КРЕН!»
+          // Danger red zone alarm (>75 or <-75)
           const inDangerZone =
             Math.abs(state.tilt) > CONFIG.DANGER_TILT &&
             Math.abs(state.tilt) < CONFIG.TILT_LIMIT;
@@ -3194,26 +4382,32 @@
             if (state.mode !== 'playing') return;
           }
 
-          // 5. Spawn & Update Obstacles
-          state.spawnTimer -= dt * (state.currentSpeed / CONFIG.BASE_SPEED);
+          // 5. Spawn & Update Obstacles (Phantom wheel reduces hitbox by 32%)
+          state.spawnTimer -=
+            dt *
+            (state.currentSpeed / CONFIG.BASE_SPEED) *
+            track.spawnRateMultiplier;
           if (state.spawnTimer <= 0) {
             spawnObstacleWave();
             const progress = Math.min(1, state.distance / CONFIG.TARGET_DISTANCE);
-            state.spawnTimer = Math.max(0.68, 1.32 - progress * 0.45);
+            state.spawnTimer = Math.max(0.58, 1.28 - progress * 0.42);
           }
 
+          // Scarce coin spawning (every 3.4 - 4.8 seconds)
           state.coinSpawnTimer -= dt;
           if (state.coinSpawnTimer <= 0) {
-            spawnCoinLine();
-            state.coinSpawnTimer = 1.65 + Math.random() * 0.8;
+            spawnScarceCoin();
+            state.coinSpawnTimer = 3.4 + Math.random() * 1.4;
           }
 
           const playerY = getPlayerY();
           const pixelSpeed = state.currentSpeed * 13.5;
+          const hitYThreshold = 34 * wheel.hitboxMultiplier;
+          const hitLaneThreshold = 0.42 * wheel.hitboxMultiplier;
 
           for (let i = state.obstacles.length - 1; i >= 0; i--) {
             const obs = state.obstacles[i];
-            obs.y += pixelSpeed * obs.speedMul * dt;
+            obs.y += pixelSpeed * (obs.speedMul / track.speedMultiplier) * dt;
 
             if (
               obs.type === 'drone' &&
@@ -3232,9 +4426,13 @@
 
             const dy = Math.abs(obs.y - playerY);
             const dlane = Math.abs(obs.visualLane - state.visualLane);
-            if (dy < 34 && dlane < 0.42 && state.invulnTimer <= 0) {
+            if (
+              dy < hitYThreshold &&
+              dlane < hitLaneThreshold &&
+              state.invulnTimer <= 0
+            ) {
               state.obstacles.splice(i, 1);
-              triggerObstacleCollision(obs);
+              triggerObstacleCollision();
               if (state.mode !== 'playing') return;
               continue;
             }
@@ -3244,10 +4442,10 @@
             }
           }
 
-          // 6. Update Coins + Tip Magnet Upgrade Logic
-          const magnetLvl = profile.upgrades.magnet || 0;
-          const magnetLaneRange = UPGRADE_CONFIG.magnetLaneRange[magnetLvl] || 0;
-          const magnetPullSpeed = UPGRADE_CONFIG.magnetPullSpeed[magnetLvl] || 0;
+          // 6. Update Coins + 7-Level Neon Magnet Logic (1 coin = +1 М)
+          const magnetLvl = prof.upgrades.magnet || 0;
+          const magnetLaneRange = UPGRADE_TREES.magnet.laneRange[magnetLvl] || 0;
+          const magnetPullSpeed = UPGRADE_TREES.magnet.pullSpeed[magnetLvl] || 0;
 
           for (let i = state.pickups.length - 1; i >= 0; i--) {
             const coin = state.pickups[i];
@@ -3260,11 +4458,10 @@
             const dyToPlayer = playerY - coin.y;
             const dlaneToPlayer = Math.abs(coin.visualLane - state.visualLane);
 
-            // Magnet pulls coins from neighboring lanes when approaching the courier
             if (
               magnetLvl > 0 &&
               dyToPlayer > -30 &&
-              dyToPlayer < 190 + magnetLvl * 35 &&
+              dyToPlayer < 175 + magnetLvl * 26 &&
               dlaneToPlayer <= magnetLaneRange
             ) {
               coin.magnetized = true;
@@ -3284,7 +4481,7 @@
               sound.coin();
               triggerHaptic(10);
               const cx = getLaneX(coin.visualLane, coin.y);
-              addFloatingText('+10$', cx, coin.y - 22, '#ffb800', 1.2);
+              addFloatingText('+1 М', cx, coin.y - 22, '#ffb800', 1.2);
               spawnNeonSparks(
                 cx,
                 coin.y,
@@ -3302,44 +4499,46 @@
             }
           }
 
-          spawnMonowheelTrail(dt);
+          spawnMonowheelTrail();
           updateParticles(dt);
           updateHudDom();
 
           if (state.distance >= CONFIG.TARGET_DISTANCE) {
             finishShift(
               true,
-              'Заказ доставлен точно по адресу! Выплата зачислена на баланс.'
+              'Маршрут пройден! Собранные монеты умножены на коэффициент трассы.'
             );
           } else if (state.timeLeft <= 0) {
             finishShift(
               false,
-              'Время смены истекло (60 секунд). Заказ был отменен клиентом.'
+              'Время смены истекло (60 секунд). Собранные монеты сохранены.'
             );
           }
         }
 
-        function spawnMonowheelTrail(dt) {
+        function spawnMonowheelTrail() {
+          const wheel = getEquippedWheelConfig();
           const py = getPlayerY() + 22;
           const px = getLaneX(state.visualLane, py);
           const isBoost = state.speedMode === 'boost';
           const count = isBoost ? 3 : 2;
+          const spread = Math.max(10, wheel.wheelWidth * 0.85);
           for (let i = 0; i < count; i++) {
             const color = isBoost
               ? i % 2 === 0
                 ? '#ff2a85'
-                : '#00f0ff'
-              : state.speedMode === 'brake'
-                ? '#ffb800'
-                : '#00f0ff';
+                : wheel.trailColor
+              : i % 2 === 0
+                ? wheel.trailColor
+                : wheel.secondaryTrailColor;
             spawnParticle(
-              px + (Math.random() - 0.5) * 14,
+              px + (Math.random() - 0.5) * spread,
               py + Math.random() * 6,
               (Math.random() - 0.5) * 28,
               95 + Math.random() * 90 + (isBoost ? 75 : 0),
-              isBoost ? 3.8 : 2.8,
+              isBoost ? 4.0 : 2.9,
               color,
-              2.3,
+              2.2,
               false,
               0
             );
@@ -3378,7 +4577,7 @@
         }
 
         // ============================================================================
-        // 12. PROCEDURAL NEON CYBERPUNK RENDERER (Canvas 2D)
+        // 12. PROCEDURAL MULTI-TRACK & CUSTOM MONOWHEEL RENDERER (Canvas 2D)
         // ============================================================================
         function renderScene() {
           ctx.save();
@@ -3390,29 +4589,36 @@
             ctx.translate(ox, oy);
           }
 
+          const track = TRACKS[state.selectedTrack] || TRACKS.neon_city;
+          const pal = track.palette;
           const horizonY = getRoadHorizonY();
+
           const skyGrad = ctx.createLinearGradient(0, 0, 0, ch);
-          skyGrad.addColorStop(0, '#04050c');
-          skyGrad.addColorStop(0.2, '#0d0822');
-          skyGrad.addColorStop(1, '#050711');
+          skyGrad.addColorStop(0, pal.skyTop);
+          skyGrad.addColorStop(0.22, pal.skyMid);
+          skyGrad.addColorStop(1, pal.skyBot);
           ctx.fillStyle = skyGrad;
           ctx.fillRect(0, 0, cw, ch);
 
-          drawCyberSkyline(horizonY);
-          drawSideNeonGrids(horizonY);
-          drawHighway(horizonY);
+          drawCyberSkyline(horizonY, pal);
+          drawSideNeonGrids(horizonY, pal);
+          drawHighway(horizonY, pal);
+
+          if (track.hasWind && state.mode === 'playing') {
+            drawWastelandWindStreaks();
+          }
 
           for (let i = 0; i < state.pickups.length; i++) {
             drawCoin(state.pickups[i]);
           }
 
           for (let i = 0; i < state.obstacles.length; i++) {
-            drawObstacle(state.obstacles[i]);
+            drawObstacle(state.obstacles[i], pal);
           }
 
           drawParticles();
-          drawCourier();
-          drawSpeedLines();
+          drawCourier(pal);
+          drawSpeedLines(pal);
           drawFloatingTexts();
 
           if (
@@ -3420,10 +4626,9 @@
             state.mode === 'paused' ||
             state.mode === 'gameover'
           ) {
-            drawTiltGauge();
+            drawTiltGauge(pal);
           }
 
-          // Danger red edge pulse when balance is in critical red zone (>75 or <-75)
           if (state.mode === 'playing' && Math.abs(state.tilt) > CONFIG.DANGER_TILT) {
             const pulse = 0.14 + Math.abs(Math.sin(state.elapsedTime * 12)) * 0.18;
             ctx.save();
@@ -3443,7 +4648,29 @@
           ctx.restore();
         }
 
-        function drawCyberSkyline(horizonY) {
+        function drawWastelandWindStreaks() {
+          const wind = state.currentWindAccel;
+          if (Math.abs(wind) < 3) return;
+          ctx.save();
+          const dir = Math.sign(wind);
+          const strength = Math.min(1, Math.abs(wind) / 44);
+          ctx.strokeStyle = `rgba(255, 140, 50, ${0.18 * strength})`;
+          ctx.lineWidth = 1.6;
+          ctx.lineCap = 'round';
+
+          for (let i = 0; i < 10; i++) {
+            const seed = (state.elapsedTime * 220 * dir + i * 97) % cw;
+            const sx = (seed + cw) % cw;
+            const sy = 175 + ((i * 63) % (ch - 240));
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + dir * (35 + strength * 40), sy + 6);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function drawCyberSkyline(horizonY, pal) {
           ctx.save();
           const sunGrad = ctx.createRadialGradient(
             cw * 0.5,
@@ -3453,14 +4680,15 @@
             horizonY,
             cw * 0.48
           );
-          sunGrad.addColorStop(0, 'rgba(255, 42, 133, 0.42)');
-          sunGrad.addColorStop(0.5, 'rgba(0, 240, 255, 0.16)');
+          sunGrad.addColorStop(0, pal.sunRgba1);
+          sunGrad.addColorStop(0.5, pal.sunRgba2);
           sunGrad.addColorStop(1, 'rgba(5, 6, 13, 0)');
           ctx.fillStyle = sunGrad;
           ctx.fillRect(0, 0, cw, horizonY + 40);
 
-          ctx.fillStyle = '#070a18';
-          ctx.strokeStyle = 'rgba(0, 240, 255, 0.28)';
+          ctx.fillStyle = pal.skyTop;
+          ctx.strokeStyle = pal.primary;
+          ctx.globalAlpha = 0.45;
           ctx.lineWidth = 1;
           const towers = [
             { x: 0.04, w: 0.1, h: 48 },
@@ -3481,12 +4709,12 @@
           ctx.restore();
         }
 
-        function drawSideNeonGrids(horizonY) {
+        function drawSideNeonGrids(horizonY, pal) {
           ctx.save();
           const topBounds = getRoadBoundsAtY(horizonY);
           const botBounds = getRoadBoundsAtY(ch);
 
-          ctx.strokeStyle = 'rgba(255, 42, 133, 0.25)';
+          ctx.strokeStyle = `rgba(${pal.gridRgba}, 0.26)`;
           ctx.lineWidth = 1;
 
           for (let i = 1; i <= 4; i++) {
@@ -3513,7 +4741,7 @@
             const p = (row + scrollNorm) / 10;
             const y = horizonY + Math.pow(p, 1.55) * (ch - horizonY);
             const b = getRoadBoundsAtY(y);
-            ctx.strokeStyle = `rgba(255, 42, 133, ${0.08 + p * 0.28})`;
+            ctx.strokeStyle = `rgba(${pal.gridRgba}, ${0.08 + p * 0.28})`;
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(b.left, y);
@@ -3524,15 +4752,15 @@
           ctx.restore();
         }
 
-        function drawHighway(horizonY) {
+        function drawHighway(horizonY, pal) {
           ctx.save();
           const topB = getRoadBoundsAtY(horizonY);
           const botB = getRoadBoundsAtY(ch);
 
           const roadGrad = ctx.createLinearGradient(0, horizonY, 0, ch);
-          roadGrad.addColorStop(0, '#090d1e');
-          roadGrad.addColorStop(0.5, '#0c1228');
-          roadGrad.addColorStop(1, '#070b18');
+          roadGrad.addColorStop(0, pal.roadTop);
+          roadGrad.addColorStop(0.5, pal.roadMid);
+          roadGrad.addColorStop(1, pal.roadBot);
 
           ctx.beginPath();
           ctx.moveTo(topB.left, horizonY);
@@ -3543,9 +4771,9 @@
           ctx.fillStyle = roadGrad;
           ctx.fill();
 
-          ctx.shadowColor = '#00f0ff';
+          ctx.shadowColor = pal.primary;
           ctx.shadowBlur = 14;
-          ctx.strokeStyle = '#00f0ff';
+          ctx.strokeStyle = pal.primary;
           ctx.lineWidth = 3;
 
           ctx.beginPath();
@@ -3564,8 +4792,8 @@
 
           ctx.fillStyle =
             state.speedMode === 'boost'
-              ? 'rgba(255, 42, 133, 0.06)'
-              : 'rgba(0, 240, 255, 0.045)';
+              ? 'rgba(255, 42, 133, 0.07)'
+              : 'rgba(255, 255, 255, 0.04)';
           ctx.beginPath();
           ctx.moveTo(topLaneL, horizonY);
           ctx.lineTo(topLaneR, horizonY);
@@ -3575,8 +4803,8 @@
           ctx.fill();
 
           const dashOffset = (state.roadScroll % 60) / 60;
-          ctx.strokeStyle = '#00f0ff';
-          ctx.shadowColor = '#00f0ff';
+          ctx.strokeStyle = pal.primary;
+          ctx.shadowColor = pal.primary;
           ctx.shadowBlur = 8;
 
           for (let div = 1; div <= 2; div++) {
@@ -3618,7 +4846,6 @@
 
           ctx.save();
 
-          // Draw magnetic tether beam when Tip Magnet pulls a coin
           if (coin.magnetized) {
             const py = getPlayerY() - 18;
             const px = getLaneX(state.visualLane, py);
@@ -3647,7 +4874,7 @@
           ctx.restore();
         }
 
-        function drawObstacle(obs) {
+        function drawObstacle(obs, pal) {
           const b = getRoadBoundsAtY(obs.y);
           const x = getLaneX(obs.visualLane, obs.y);
           const s = b.scale;
@@ -3658,11 +4885,11 @@
           if (obs.type === 'car') {
             const w = 52 * s;
             const h = 74 * s;
-            ctx.shadowColor = '#ff2a85';
+            ctx.shadowColor = pal.secondary;
             ctx.shadowBlur = 14;
 
             ctx.fillStyle = '#161233';
-            ctx.strokeStyle = '#ff2a85';
+            ctx.strokeStyle = pal.secondary;
             ctx.lineWidth = 2.2 * s;
             ctx.beginPath();
             ctx.roundRect(-w * 0.5, -h * 0.5, w, h, 10 * s);
@@ -3746,7 +4973,6 @@
             ctx.shadowColor = p.color;
 
             if (p.isSpark) {
-              // Oriented neon spark streak
               const tailX = p.x - p.vx * 0.036;
               const tailY = p.y - p.vy * 0.036;
               ctx.shadowBlur = 12;
@@ -3773,37 +4999,35 @@
           ctx.restore();
         }
 
-        function drawSpeedLines() {
+        function drawSpeedLines(pal) {
           if (state.boostVisual <= 0.01) return;
 
           ctx.save();
           const vis = state.boostVisual;
 
-          // Edge glow bands on left and right sides during Boost
           const leftGrad = ctx.createLinearGradient(0, 0, cw * 0.16, 0);
-          leftGrad.addColorStop(0, `rgba(255, 42, 133, ${0.22 * vis})`);
-          leftGrad.addColorStop(1, 'rgba(255, 42, 133, 0)');
+          leftGrad.addColorStop(0, `rgba(${pal.gridRgba}, ${0.22 * vis})`);
+          leftGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = leftGrad;
           ctx.fillRect(0, 0, cw * 0.16, ch);
 
           const rightGrad = ctx.createLinearGradient(cw, 0, cw * 0.84, 0);
-          rightGrad.addColorStop(0, `rgba(0, 240, 255, ${0.22 * vis})`);
-          rightGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+          rightGrad.addColorStop(0, `rgba(${pal.gridRgba}, ${0.22 * vis})`);
+          rightGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = rightGrad;
           ctx.fillRect(cw * 0.84, 0, cw * 0.16, ch);
 
-          // High-speed neon streaks rushing along left & right edges
           ctx.lineCap = 'round';
           for (let i = 0; i < SPEED_LINE_COUNT; i++) {
             const sl = speedLines[i];
-            const x =
-              sl.side === -1 ? sl.edgeOffset : cw - sl.edgeOffset;
+            const x = sl.side === -1 ? sl.edgeOffset : cw - sl.edgeOffset;
             const y = sl.yFrac * (ch + sl.length) - sl.length;
+            const lineCol = i % 2 === 0 ? pal.primary : pal.secondary;
 
             ctx.globalAlpha = vis * (0.45 + (i % 3) * 0.2);
-            ctx.shadowColor = sl.color;
+            ctx.shadowColor = lineCol;
             ctx.shadowBlur = 10;
-            ctx.strokeStyle = sl.color;
+            ctx.strokeStyle = lineCol;
             ctx.lineWidth = i % 2 === 0 ? 2.5 : 1.6;
 
             ctx.beginPath();
@@ -3815,7 +5039,9 @@
           ctx.restore();
         }
 
-        function drawCourier() {
+        function drawCourier(pal) {
+          const prof = getActiveProfile();
+          const wheel = getEquippedWheelConfig();
           const py = getPlayerY();
           const px = getLaneX(state.visualLane, py);
           const laneVel = state.lane - state.visualLane;
@@ -3829,60 +5055,57 @@
             Math.floor(state.invulnTimer * 18) % 2 === 0
           ) {
             ctx.globalAlpha = 0.45;
+          } else if (wheel.id === 'phantom') {
+            ctx.globalAlpha = 0.88 + Math.sin(state.elapsedTime * 8) * 0.08;
           }
 
-          // 1. Ground Neon Halo under Monowheel
-          const wheelColor =
-            state.speedMode === 'boost'
-              ? '#ff2a85'
-              : state.speedMode === 'brake'
-                ? '#ffb800'
-                : '#00f0ff';
-          const haloGrad = ctx.createRadialGradient(0, 22, 2, 0, 22, 36);
-          haloGrad.addColorStop(
-            0,
-            state.speedMode === 'boost'
-              ? 'rgba(255, 42, 133, 0.55)'
-              : 'rgba(0, 240, 255, 0.45)'
-          );
-          haloGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+          const wheelGlowColor =
+            state.speedMode === 'boost' ? '#ff2a85' : wheel.trailColor;
+
+          const haloGrad = ctx.createRadialGradient(0, 22, 2, 0, 22, 38);
+          haloGrad.addColorStop(0, wheelGlowColor);
+          haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.save();
+          ctx.globalAlpha = 0.42;
           ctx.fillStyle = haloGrad;
           ctx.beginPath();
-          ctx.ellipse(0, 22, 34, 12, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 22, 24 + wheel.wheelWidth * 0.7, 12, 0, 0, Math.PI * 2);
           ctx.fill();
+          ctx.restore();
 
           ctx.rotate(bodyLean);
 
-          // 2. Glowing Monowheel
-          ctx.shadowColor = wheelColor;
-          ctx.shadowBlur = 16;
+          // Glowing Monowheel with custom width & trail color from Transport Shop
+          const ww = wheel.wheelWidth;
+          ctx.shadowColor = wheelGlowColor;
+          ctx.shadowBlur = 18;
           ctx.fillStyle = '#090d1a';
-          ctx.strokeStyle = wheelColor;
-          ctx.lineWidth = 4;
+          ctx.strokeStyle = wheelGlowColor;
+          ctx.lineWidth = wheel.id === 'heavy_duty' ? 4.5 : 3.6;
           ctx.beginPath();
-          ctx.roundRect(-8, -2, 16, 30, 8);
+          ctx.roundRect(-ww * 0.5, -2, ww, 30, ww * 0.48);
           ctx.fill();
           ctx.stroke();
 
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = wheel.secondaryTrailColor;
+          ctx.lineWidth = 2.2;
           ctx.beginPath();
           ctx.moveTo(0, 3);
           ctx.lineTo(0, 23);
           ctx.stroke();
 
-          // 3. Courier Torso & Helmet
-          ctx.shadowColor = '#00f0ff';
+          // Courier Torso & Helmet
+          ctx.shadowColor = wheel.trailColor;
           ctx.shadowBlur = 10;
           ctx.fillStyle = '#131b36';
-          ctx.strokeStyle = '#00f0ff';
+          ctx.strokeStyle = wheel.trailColor;
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.roundRect(-17, -34, 34, 34, 9);
           ctx.fill();
           ctx.stroke();
 
-          ctx.strokeStyle = '#ff2a85';
+          ctx.strokeStyle = pal.secondary;
           ctx.lineWidth = 2.2;
           ctx.beginPath();
           ctx.moveTo(-10, -26);
@@ -3891,14 +5114,14 @@
           ctx.stroke();
 
           ctx.fillStyle = '#0b1021';
-          ctx.strokeStyle = '#00f0ff';
+          ctx.strokeStyle = wheel.trailColor;
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.arc(0, -44, 12, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
 
-          // 4. SELECTED ORDER CARGO SHAPE ABOVE COURIER
+          // Cargo Container above Courier
           const tiltRad = (state.tilt / CONFIG.TILT_LIMIT) * 0.72;
           const tiltOffsetX = (state.tilt / CONFIG.TILT_LIMIT) * 18;
           const absTilt = Math.abs(state.tilt);
@@ -3913,7 +5136,6 @@
           ctx.shadowBlur = absTilt >= 70 ? 22 : 13;
 
           if (state.selectedOrder === 'pizza') {
-            // Flat Wide Thermal Pizza Box + Neon Slice Icon
             const bw = 50;
             const bh = 18;
             ctx.fillStyle = '#261219';
@@ -3924,7 +5146,6 @@
             ctx.fill();
             ctx.stroke();
 
-            // Thermal stripe & pizza emblem
             ctx.strokeStyle = '#ffb800';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -3937,7 +5158,6 @@
             ctx.arc(0, -bh * 0.5, 4, 0, Math.PI * 2);
             ctx.fill();
           } else if (state.selectedOrder === 'vase') {
-            // Tall Faceted Crystal Vase
             ctx.fillStyle = 'rgba(16, 32, 62, 0.92)';
             ctx.strokeStyle = statusColor;
             ctx.lineWidth = 2.5;
@@ -3955,7 +5175,6 @@
             ctx.fill();
             ctx.stroke();
 
-            // Crystal facet highlights
             ctx.strokeStyle = '#ff2a85';
             ctx.lineWidth = 1.6;
             ctx.beginPath();
@@ -3967,7 +5186,6 @@
             ctx.lineTo(0, 0);
             ctx.stroke();
           } else {
-            // Piranha Aquarium with Sloshing Water Wave & Swimming Piranhas
             const bw = 48;
             const bh = 34;
             ctx.fillStyle = 'rgba(8, 26, 44, 0.9)';
@@ -3977,7 +5195,6 @@
             ctx.roundRect(-bw * 0.5, -bh, bw, bh, 6);
             ctx.fill();
 
-            // Animated sloshing water surface inside tank
             const sloshAmp =
               state.waveTimer > 0 ? Math.sin(state.wavePhase) * 6 : 2;
             ctx.fillStyle = 'rgba(0, 240, 255, 0.34)';
@@ -3994,7 +5211,6 @@
             ctx.closePath();
             ctx.fill();
 
-            // Swimming Neon Piranha Silhouette
             const fishX = Math.sin(state.elapsedTime * 5) * 9;
             const fishY = -bh * 0.32 + Math.cos(state.elapsedTime * 7) * 3;
             ctx.fillStyle = '#ffb800';
@@ -4009,13 +5225,11 @@
             ctx.closePath();
             ctx.fill();
 
-            // Outer tank frame
             ctx.strokeRect(-bw * 0.5, -bh, bw, bh);
           }
 
-          // Titanium Packaging reinforcement corner brackets if upgraded
-          if (profile.upgrades.titanium > 0) {
-            ctx.strokeStyle = '#00f0ff';
+          if (prof.upgrades.armor > 0) {
+            ctx.strokeStyle = wheel.trailColor;
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(-26, -4);
@@ -4027,7 +5241,7 @@
           ctx.restore();
         }
 
-        function drawTiltGauge() {
+        function drawTiltGauge(pal) {
           const cx = cw * 0.5;
           const gy = getTiltGaugeY();
           const barW = Math.min(cw - 36, 300);
@@ -4039,7 +5253,7 @@
           ctx.strokeStyle =
             state.waveTimer > 0
               ? 'rgba(255, 42, 133, 0.65)'
-              : 'rgba(0, 240, 255, 0.28)';
+              : pal.primary;
           ctx.lineWidth = 1.2;
           ctx.beginPath();
           ctx.roundRect(cx - halfW - 10, gy - 20, barW + 20, 44, 12);
@@ -4087,13 +5301,16 @@
           ctx.font = '700 11px "JetBrains Mono", monospace';
           ctx.textAlign = 'center';
           const sign = state.tilt > 0.5 ? '+' : '';
-          const waveBadge =
-            state.waveTimer > 0
-              ? ' · ВОЛНА ' + state.waveTimer.toFixed(1) + 'с'
-              : '';
+          let extraBadge = '';
+          if (state.waveTimer > 0) {
+            extraBadge = ' · ВОЛНА ' + state.waveTimer.toFixed(1) + 'с';
+          } else if (Math.abs(state.currentWindAccel) > 6) {
+            extraBadge =
+              state.currentWindAccel > 0 ? ' · ВЕТЕР →' : ' · ← ВЕТЕР';
+          }
           ctx.fillStyle = markerColor;
           ctx.fillText(
-            'БАЛАНС: ' + sign + Math.round(state.tilt) + waveBadge,
+            'БАЛАНС: ' + sign + Math.round(state.tilt) + extraBadge,
             cx,
             gy + 18
           );
@@ -4135,8 +5352,8 @@
         // ============================================================================
         // 13. MAIN LOOP, AUTO-PAUSE ON VISIBILITY/BLUR & INITIALIZATION
         // ============================================================================
-        loadProfile();
-        syncGarageAndWalletUI();
+        loadProfilesFromStorage();
+        syncAllMenusUI();
         attachTouchPulseFeedback();
 
         function autoPauseOnBackground() {
@@ -4175,12 +5392,29 @@
 
         const params = new URLSearchParams(window.location.search);
         if (params.get('autostart') === '1') {
+          const trackParam = params.get('track');
           const orderParam = params.get('order');
-          resetGame(orderParam && ORDERS[orderParam] ? orderParam : 'pizza');
+          const courierParam = params.get('courier');
+          const wheelParam = params.get('wheel');
+          if (courierParam) {
+            selectOrCreateProfile(courierParam);
+          }
+          if (wheelParam && MONOWHEELS[wheelParam]) {
+            const prof = getActiveProfile();
+            if (!prof.ownedWheels.includes(wheelParam)) {
+              prof.ownedWheels.push(wheelParam);
+            }
+            prof.equippedWheel = wheelParam;
+            saveProfilesToStorage();
+          }
+          resetGame(
+            trackParam && TRACKS[trackParam] ? trackParam : 'neon_city',
+            orderParam && ORDERS[orderParam] ? orderParam : 'pizza'
+          );
           setBodyState('playing');
         } else {
-          resetGame('pizza');
-          setBodyState('title');
+          resetGame('neon_city', 'pizza');
+          setBodyState('auth');
         }
 
         requestAnimationFrame(frameLoop);
